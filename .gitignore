@@ -1,0 +1,18 @@
+# Datos locales (base, respaldos, secretos)
+data/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+secreto.key
+
+# Entorno
+.env
+.env.*
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+.tmp-*

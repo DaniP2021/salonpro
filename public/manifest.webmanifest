@@ -1,0 +1,21 @@
+{
+  "name": "SalonPro · Gestión del salón",
+  "short_name": "SalonPro",
+  "description": "Agenda, clientes, cobros y comisiones para salones de belleza, barberías y estudios de uñas.",
+  "start_url": "/#/hoy",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf7f2",
+  "theme_color": "#14110f",
+  "lang": "es-AR",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2314110F'/%3E%3Cpath d='M176 144c35 0 58 26 70 51l106 141M176 368c35 0 58-26 70-51l106-141' stroke='%23C9A96B' stroke-width='26' fill='none' stroke-linecap='round'/%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

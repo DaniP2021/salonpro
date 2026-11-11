@@ -1,0 +1,13 @@
+{
+  "name": "salonpro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gestión integral para salones de belleza: agenda multi-profesional, clientes, cobros, comisiones y WhatsApp.",
+  "engines": { "node": ">=22.5.0" },
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "test": "node --test tests/"
+  }
+}

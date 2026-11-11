@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Gestión integral de turnos, clientes, cobros y comisiones para salones de belleza.">
+  <title>SalonPro · Gestión del salón</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314110F'/%3E%3Cpath d='M11 9c2.2 0 3.6 1.6 4.4 3.2L22 21M11 23c2.2 0 3.6-1.6 4.4-3.2L22 11' stroke='%23C9A96B' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div id="raiz" class="arranque">
+    <div class="arranque-caja">
+      <div class="arranque-marca">SalonPro</div>
+      <p>Cargando…</p>
+    </div>
+  </div>
+
+  <!-- Íconos (sprite inline: sin pedidos externos, compatible con la CSP) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-hoy" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-agenda" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-turnos" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-clientes" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16.5 5.6a3.2 3.2 0 0 1 0 6.3M18 14.2a6 6 0 0 1 3.5 5.5"/></symbol>
+    <symbol id="i-catalogo" viewBox="0 0 24 24"><path d="M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+    <symbol id="i-equipo" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M20 4 8.4 15.6M8.4 8.4 20 20"/></symbol>
+    <symbol id="i-caja" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10.5h19M16.5 15h2"/></symbol>
+    <symbol id="i-reportes" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 20v-6M13 20V8M18 20v-9"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 24 24"><path d="M20.5 11.6A8.4 8.4 0 0 1 7.9 19L3.5 20.4l1.4-4.3a8.4 8.4 0 1 1 15.6-4.5z"/><path d="M9 9.2c0 3 2.3 5.3 5.2 5.3.6 0 1-.5 1-1l-.1-1-1.6-.5-.8.9a4 4 0 0 1-1.8-1.8l.9-.8-.5-1.6h-1c-.6 0-1.1.4-1.3 1z"/></symbol>
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"/></symbol>
+    <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+    <symbol id="i-plata" viewBox="0 0 24 24"><path d="M12 3v18M16.5 7.2C16.5 5.4 14.5 4.5 12 4.5S7.5 5.6 7.5 7.5c0 3.8 9 2.2 9 6 0 1.9-2 3-4.5 3s-4.5-1-4.5-2.8"/></symbol>
+    <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5v13A1.5 1.5 0 0 1 18.5 20H15"/><path d="M10 8l-4 4 4 4M6 12h9"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  </svg>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
