@@ -197,3 +197,27 @@ Los respaldos y el archivo `data/` están en `.gitignore`: no se versionan.
 | Facturación electrónica / pasarela de pago | Fuera de alcance (diseñado como extensión) |
 
 Ver [docs/PLAN.md](docs/PLAN.md) para el alcance completo, las decisiones técnicas y los riesgos.
+
+---
+
+## Licencia y uso
+
+**© 2026 Daniel Paltano. Todos los derechos reservados.**
+
+Este repositorio se publica para que se pueda **leer y estudiar**. No es software libre y no incluye
+ninguna licencia de uso.
+
+| | |
+|---|---|
+| **Sí** | Leer el código, clonarlo para estudiarlo y usar las funciones propias de GitHub (fork dentro de la plataforma, issues, pull requests) |
+| **No, sin autorización escrita** | Usar el software, copiarlo, modificarlo, redistribuirlo, publicarlo en otro lado o incorporarlo —total o parcialmente— a otro proyecto, con o sin fines comerciales |
+
+Si necesitás usar este código para algo, abrí un *issue* en este repositorio y lo conversamos.
+
+También se pueden otorgar **autorizaciones individuales por escrito** a una persona concreta (para
+que use, modifique y publique el código en su propio repositorio) sin que eso habilite a nadie más.
+Ese permiso se acuerda por mensaje o email, indicando a quién alcanza, para qué y con qué
+condiciones.
+
+> Sin un archivo `LICENSE`, el derecho de autor reserva todos los derechos por defecto: que el
+> repositorio sea público permite mirarlo, no usarlo. Este aviso no es asesoramiento legal.
