@@ -172,7 +172,9 @@ function servirEstatico(req, res, pathname) {
   const contenido = fs.readFileSync(destino);
   res.statusCode = 200;
   res.setHeader('Content-Type', MIME[extension] || 'application/octet-stream');
-  res.setHeader('Cache-Control', extension === '.html' ? 'no-cache' : 'public, max-age=3600');
+  // Sin caché: si se corrige un archivo, el navegador lo toma al recargar.
+  // Con max-age alto, un arreglo puede tardar una hora en llegar a pantalla.
+  res.setHeader('Cache-Control', 'no-cache, must-revalidate');
   cabecerasSeguridad(res, extension === '.html');
   if (req.method === 'HEAD') {
     res.setHeader('Content-Length', contenido.length);

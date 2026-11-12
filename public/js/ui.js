@@ -189,6 +189,9 @@ export function capa({ titulo, sub, contenido, botones = [], tipo = 'hoja', alCe
 
   velo.addEventListener('mousedown', (evento) => { if (evento.target === velo) cerrar(); });
   document.addEventListener('keydown', alPresionar);
+  // La caja va DENTRO del velo: sin esto el velo queda vacío y tapa la app
+  // con un vidrio oscuro, bloqueando todos los clics.
+  velo.appendChild(caja);
   document.body.appendChild(velo);
   return referencia;
 }

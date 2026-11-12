@@ -420,6 +420,61 @@ async function main() {
     return `turno #${turno.id} · ${datos.nodos} nodos`;
   });
 
+  /**
+   * Regresión del bug que dejaba la app inutilizable: la capa se insertaba vacía
+   * en el documento. El velo tapaba todo y no había ventana que cerrar.
+   * El chequeo tiene que mirar el documento real, no el nodo devuelto.
+   */
+  await probar('La capa se inserta completa en el documento', async () => {
+    documento.body = new Nodo('body');
+    const ui = await import(pathToFileURL(path.resolve('public/js/ui.js')).href);
+    const hoja = ui.capa({
+      titulo: 'Prueba de capa',
+      contenido: ui.el('p', { texto: 'Contenido de prueba' }),
+      botones: [{ texto: 'Cerrar', accion: (r) => r.cerrar() }],
+    });
+
+    const velo = documento.body.children.find((n) => n.classList.contains('velo'));
+    if (!velo) throw new Error('no se insertó el velo en el documento');
+
+    const caja = velo.children.find((n) => n.classList.contains('hoja'));
+    if (!caja) throw new Error('el velo quedó vacío: la caja (la ventana) no está dentro');
+
+    const nodosCaja = contadorRecursivo(caja);
+    if (nodosCaja < 6) throw new Error(`la ventana tiene muy poco contenido (${nodosCaja} nodos)`);
+    if (!caja.textContent.includes('Prueba de capa')) throw new Error('la ventana no muestra el título');
+    if (!caja.textContent.includes('Contenido de prueba')) throw new Error('la ventana no muestra el contenido');
+
+    // Y debe poder cerrarse: el velo desaparece del documento.
+    hoja.cerrar();
+    if (documento.body.children.some((n) => n.classList.contains('velo'))) {
+      throw new Error('el velo quedó en el documento después de cerrar');
+    }
+    return `velo + ventana de ${nodosCaja} nodos, cierre correcto`;
+  });
+
+  /** Un modal de confirmación también tiene que quedar con su caja dentro. */
+  await probar('El diálogo de confirmación se inserta entero', async () => {
+    documento.body = new Nodo('body');
+    const ui = await import(pathToFileURL(path.resolve('public/js/ui.js')).href);
+    const promesa = ui.confirmar({ mensaje: '¿Seguir?', ok: 'Sí' });
+
+    const velo = documento.body.children.find((n) => n.classList.contains('velo'));
+    if (!velo) throw new Error('no se insertó el velo');
+    const modal = velo.children.find((n) => n.classList.contains('modal'));
+    if (!modal) throw new Error('el velo quedó vacío: falta el modal');
+    if (!velo.classList.contains('centrado')) throw new Error('el modal debería estar centrado');
+    if (!modal.textContent.includes('¿Seguir?')) throw new Error('el modal no muestra el mensaje');
+
+    // Se cancela con el botón correspondiente para no dejar la promesa colgada.
+    const botones = modal.querySelectorAll('.btn');
+    if (botones.length < 2) throw new Error('faltan los botones de acción');
+    botones[botones.length - 1].click();
+    const resultado = await promesa;
+    if (resultado !== true) throw new Error('el botón de aceptar no resolvió la confirmación');
+    return `${botones.length} botones · resuelve correctamente`;
+  });
+
   // Verificación de exportaciones usadas entre módulos
   await probar('Contratos entre módulos', async () => {
     const ui = await import(pathToFileURL(path.resolve('public/js/ui.js')).href);
