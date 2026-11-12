@@ -2,7 +2,7 @@
 
 import { api, estado, esGestion } from '../api.js';
 import {
-  dinero, fechaCorta, hoyISO, telefonoLegible, ETIQUETA_ESTADO,
+  dinero, fechaCorta, fechaNumerica, hoyISO, telefonoLegible, ETIQUETA_ESTADO,
 } from '../formato.js';
 import {
   aviso, boton, campos, capa, datos, el, etiquetaEstado, icono, mensajeError,
@@ -174,11 +174,13 @@ async function ficha(contenedor, ctx, id) {
         ['Teléfono', cliente.telefono ? telefonoLegible(cliente.telefono) : 'sin dato'],
         ['Email', cliente.email || 'sin dato'],
         ['Género', cliente.genero === 'ns' ? 'sin dato' : cliente.genero],
-        ['Cumpleaños', cliente.cumple_mes ? `${cliente.cumple_dia || '?'}/${cliente.cumple_mes}` : 'sin dato'],
+        ['Cumpleaños', cliente.cumple_mes
+          ? `${String(cliente.cumple_dia || '?').padStart(2, '0')}/${String(cliente.cumple_mes).padStart(2, '0')}`
+          : 'sin dato'],
         ['WhatsApp', cliente.acepta_whatsapp ? 'acepta mensajes' : 'no molestar'],
         ['Profesional preferido', cliente.profesional_preferido_nombre || '—'],
         ['Origen', cliente.origen || '—'],
-        ['Cliente desde', String(cliente.creado_en || '').slice(0, 10)],
+        ['Cliente desde', fechaNumerica(cliente.creado_en) || '—'],
         ['Preferencias', cliente.preferencias || '—'],
         ['Notas', cliente.notas || '—'],
       ].map(([k, v]) => [k, v])),

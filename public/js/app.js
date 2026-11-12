@@ -19,6 +19,10 @@ import * as vistaAjustes from './vistas/ajustes.js';
 
 const RAIZ = document.getElementById('raiz');
 
+// Se muestra abajo del menú. Si no coincide con la última entrega, el navegador
+// está usando archivos viejos de la caché.
+const VERSION = '1.3';
+
 const MENU = [
   {
     grupo: 'Operación',
@@ -169,7 +173,14 @@ function construirShell() {
         el('button', {
           clase: 'salir', title: 'Cerrar sesión', 'aria-label': 'Cerrar sesión',
           on: { click: cerrarSesion },
-        }, icono('salir', 'chico')))));
+        }, icono('salir', 'chico'))),
+      // Sello de versión: sirve para saber si el navegador cargó la última
+      // versión de los archivos o quedó una copia vieja en caché.
+      el('div', {
+        clase: 'mini',
+        style: { color: '#5d5548', textAlign: 'center', padding: '6px 0 2px', letterSpacing: '.04em' },
+        texto: `versión ${VERSION}`,
+      })));
 
   const titulo = el('h1', { texto: '' });
   const subtitulo = el('div', { clase: 'sub', texto: '' });

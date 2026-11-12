@@ -2,7 +2,8 @@
 
 import { api, estado, esAdmin, esProfesional } from '../api.js';
 import {
-  dinero, dineroCompacto, ETIQUETA_MODALIDAD, fechaCorta, finMes, hoyISO, inicioMes, sumarDias,
+  dinero, dineroCompacto, ETIQUETA_MODALIDAD, fechaCorta, fechaNumerica, finMes, hoyISO,
+  inicioMes, sumarDias,
 } from '../formato.js';
 import {
   aviso, boton, el, graficoBarras, icono, mensajeError, progreso, tabla, vaciar,
@@ -269,7 +270,7 @@ function bloqueLiquidacion(liquidacion, simbolo) {
         tabla({
           filas: liquidacion.alquileres.cargos,
           columnas: [
-            { titulo: 'Período', render: (a) => `${a.periodo_desde} → ${a.periodo_hasta}` },
+            { titulo: 'Período', render: (a) => `${fechaNumerica(a.periodo_desde)} → ${fechaNumerica(a.periodo_hasta)}` },
             { titulo: 'Concepto', render: (a) => a.concepto },
             { titulo: 'Monto', clase: 'num', render: (a) => dinero(a.monto_centavos, simbolo) },
             {

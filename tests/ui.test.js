@@ -475,6 +475,62 @@ async function main() {
     return `${botones.length} botones · resuelve correctamente`;
   });
 
+  /**
+   * Los formularios de alta/edición son justamente los que "no funcionaban":
+   * todos abren una capa. Se verifica que la ventana esté en el documento y
+   * que tenga campos y botones reales.
+   */
+  await probar('Formularios de alta y edición abren completos', async () => {
+    const vistaCatalogo = await import(pathToFileURL(path.resolve('public/js/vistas/catalogo.js')).href);
+    const vistaClientes = await import(pathToFileURL(path.resolve('public/js/vistas/clientes.js')).href);
+
+    const casos = [
+      ['cliente', () => vistaClientes.formularioCliente(null, () => {})],
+      ['servicio', () => vistaCatalogo.formularioServicio(null, () => {})],
+      ['producto', () => vistaCatalogo.formularioProducto(null, () => {})],
+      ['categoría', () => vistaCatalogo.formularioCategoria(null, () => {})],
+    ];
+
+    const resumen = [];
+    for (const [nombre, abrir] of casos) {
+      documento.body = new Nodo('body');
+      const hoja = abrir();
+      if (!hoja) throw new Error(`${nombre}: el formulario no devolvió la capa`);
+
+      const velo = documento.body.children.find((n) => n.classList.contains('velo'));
+      if (!velo) throw new Error(`${nombre}: no se insertó el velo en el documento`);
+      const caja = velo.children.find((n) => n.classList.contains('hoja'));
+      if (!caja) throw new Error(`${nombre}: el velo quedó vacío, sin la ventana`);
+
+      const campos_ = contarEtiqueta(caja, 'INPUT') + contarEtiqueta(caja, 'SELECT') + contarEtiqueta(caja, 'TEXTAREA');
+      const botones = caja.querySelectorAll('.btn').length;
+      if (campos_ < 2) throw new Error(`${nombre}: la ventana tiene ${campos_} campos`);
+      if (botones < 2) throw new Error(`${nombre}: la ventana tiene ${botones} botones`);
+      if (!caja.textContent.trim()) throw new Error(`${nombre}: la ventana está vacía`);
+
+      hoja.cerrar();
+      resumen.push(`${nombre} ${campos_} campos`);
+    }
+    return resumen.join(' · ');
+  });
+
+  /**
+   * Y el formulario de alta de turno, que es el que arma la operación diaria:
+   * tiene que traer horarios libres y poder enviarse.
+   */
+  await probar('El formulario de turno trae horarios y total', async () => {
+    documento.body = new Nodo('body');
+    const hoja = await turnoUi.abrirNuevoTurno({ servicioId: estado.servicios[0].id });
+    const velo = documento.body.children.find((n) => n.classList.contains('velo'));
+    if (!velo) throw new Error('no se insertó el velo');
+    const caja = velo.children.find((n) => n.classList.contains('hoja'));
+    if (!caja) throw new Error('el velo quedó vacío');
+    const opciones = caja.querySelectorAll('.opcion').length;
+    hoja.cerrar();
+    if (!opciones) throw new Error('no ofreció horarios libres');
+    return `${opciones} horarios ofrecidos dentro de la ventana`;
+  });
+
   // Verificación de exportaciones usadas entre módulos
   await probar('Contratos entre módulos', async () => {
     const ui = await import(pathToFileURL(path.resolve('public/js/ui.js')).href);

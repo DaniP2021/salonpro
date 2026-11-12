@@ -2,7 +2,7 @@
 
 import { api, estado, esAdmin, esGestion } from '../api.js';
 import {
-  dinero, ETIQUETA_MODALIDAD, fechaCorta, hoyISO, sumarDias, DIAS,
+  dinero, ETIQUETA_MODALIDAD, fechaCorta, fechaNumerica, hoyISO, sumarDias, DIAS,
 } from '../formato.js';
 import {
   aviso, boton, campos, capa, confirmar, el, icono, mensajeError, tabla, vaciar,
@@ -136,7 +136,7 @@ export async function montar(contenedor, ctx) {
       filas: alquileres,
       vacio: 'Todavía no generaste cargos de alquiler.',
       columnas: [
-        { titulo: 'Período', render: (a) => `${a.periodo_desde} → ${a.periodo_hasta}` },
+        { titulo: 'Período', render: (a) => `${fechaNumerica(a.periodo_desde)} → ${fechaNumerica(a.periodo_hasta)}` },
         {
           titulo: 'Profesional',
           render: (a) => el('div', { clase: 'fila', style: { gap: '6px' } },

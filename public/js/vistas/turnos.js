@@ -2,7 +2,7 @@
 
 import { api, estado, esGestion } from '../api.js';
 import {
-  dinero, ETIQUETA_ESTADO, fechaCorta, finMes, hoyISO, inicioMes, soloFecha,
+  dinero, ETIQUETA_ESTADO, fechaCorta, fechaNumerica, finMes, hoyISO, inicioMes, soloFecha,
 } from '../formato.js';
 import { boton, el, etiquetaEstado, icono, tabla, vaciar } from '../ui.js';
 import { abrirNuevoTurno, abrirTurno, saldoTurno } from './turno-ui.js';
@@ -95,7 +95,7 @@ async function pintar(contenedor, ctx, filtros) {
   const deuda = atendidos.reduce((suma, t) => suma + saldoTurno(t), 0);
 
   contenedor.appendChild(el('div', { clase: 'fila entre mb mini suave envolver' },
-    el('span', { texto: `${turnos.length} turnos entre ${filtros.desde} y ${filtros.hasta}` }),
+    el('span', { texto: `${turnos.length} turnos entre ${fechaNumerica(filtros.desde)} y ${fechaNumerica(filtros.hasta)}` }),
     el('span', { texto: `Atendidos: ${atendidos.length} · Facturado ${dinero(facturado, simbolo)} · Cobrado ${dinero(cobrado, simbolo)}${deuda ? ` · Debe ${dinero(deuda, simbolo)}` : ''}` })));
 
   contenedor.appendChild(el('div', { clase: 'tarjeta' },

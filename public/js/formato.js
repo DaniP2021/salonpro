@@ -95,11 +95,25 @@ export function hora(texto) {
   return d ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
 }
 
-/** "mié 11/11 · 15:30" */
+/** "11/11/2026" — formato de fecha de lectura habitual en Argentina. */
+export function fechaNumerica(texto) {
+  const d = parseFecha(texto);
+  if (!d) return '';
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+/** "11/11/2026 · 15:30" */
 export function fechaCorta(texto) {
   const d = parseFecha(texto);
   if (!d) return '';
-  return `${DIAS_CORTOS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth() + 1)} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${fechaNumerica(d)} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** "mié 11/11" — para encabezados donde el año se sobreentiende. */
+export function fechaDiaCorta(texto) {
+  const d = parseFecha(texto);
+  if (!d) return '';
+  return `${DIAS_CORTOS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
 }
 
 /** "miércoles 11 de noviembre, 15:30" */
