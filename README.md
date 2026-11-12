@@ -103,6 +103,46 @@ Detalle completo en [docs/WHATSAPP.md](docs/WHATSAPP.md).
 
 ---
 
+## Usarla desde el celular o desde otra computadora
+
+Por defecto la app escucha solo en `127.0.0.1`, o sea que únicamente se puede abrir desde la misma
+computadora. Para usarla desde el celular, la tablet o la PC de la recepción, hay que abrirla a la
+red local.
+
+**Doble clic en `iniciar-celular.cmd`.** La ventana imprime las direcciones:
+
+```
+  Para abrir desde otro dispositivo (mismo WiFi):
+    http://192.168.100.69:8000   (Wi-Fi)
+```
+
+Esa es la dirección que se escribe en el navegador del teléfono, conectado a **la misma red WiFi**.
+El celular y la computadora tienen que estar en la misma red.
+
+También desde la terminal:
+
+```powershell
+$env:SALON_HOST='0.0.0.0'; node server.js
+```
+
+> **Antes de dejarlo abierto en la red, cambiá la contraseña del administrador** desde
+> *Ajustes → Cambiar contraseña*. La de la demo (`salon2026`) está publicada en este repositorio y
+> cualquiera en la red podría entrar con ella.
+
+Si el celular no conecta, casi siempre es el firewall de Windows: la primera vez que el servidor
+recibe una conexión externa, Windows pregunta si permitir `node.exe` en la red privada. Hay que
+responder **Permitir**. Si no aparece el aviso, se puede crear la regla desde una terminal de
+administrador:
+
+```powershell
+netsh advfirewall firewall add rule name="SalonPro" dir=in action=allow protocol=TCP localport=8000
+```
+
+Para usarla **desde fuera de casa** hace falta un túnel (Cloudflare Tunnel, ngrok) o publicarla en un
+servidor: abrir el puerto del router a internet sin HTTPS y con la contraseña de demo es un riesgo real.
+
+---
+
 ## Estructura
 
 ```

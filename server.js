@@ -10,6 +10,7 @@
 //   SALON_DESPACHO=0 apaga el despachador de WhatsApp
 
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -78,6 +79,29 @@ function banner(info, puerto) {
     `  Webhook WA: ${URL_BASE}/api/whatsapp/webhook`,
     '',
   ];
+
+  // Si escucha en toda la red, se muestran las direcciones para abrir desde
+  // el celular o desde otra computadora. Sin esto hay que adivinar la IP.
+  if (HOST === '0.0.0.0' || HOST === '::') {
+    const ips = [];
+    for (const nombre of Object.keys(os.networkInterfaces())) {
+      for (const datos of os.networkInterfaces()[nombre] || []) {
+        if (String(datos.family) !== 'IPv4' || datos.internal) continue;
+        ips.push({ ip: datos.address, interfaz: nombre });
+      }
+    }
+    if (ips.length) {
+      // Se descartan las 169.254.x.x (APIPA): son interfaces sin red real
+      // y nadie puede conectarse por ahí.
+      const utiles = ips.filter(({ ip }) => !ip.startsWith('169.254.'));
+      const mostrar = utiles.length ? utiles : ips;
+      lineas.push('  Para abrir desde otro dispositivo (mismo WiFi):');
+      for (const { ip, interfaz } of mostrar) {
+        lineas.push(`    http://${ip}:${PUERTO}   (${interfaz})`);
+      }
+      lineas.push('');
+    }
+  }
   if (info.adminCreado) {
     lineas.push('  ┌─ Primer arranque: cuenta de administración creada ─');
     lineas.push(`  │  Usuario:    ${info.adminCreado.email}`);
