@@ -21,8 +21,8 @@ echo.
 echo    Las direcciones para otros dispositivos aparecen
 echo    mas abajo, despues del logo. Hay dos tipos:
 echo.
-echo      la de Tailscale (100.x)  -> desde cualquier lado
-echo      la de Wi-Fi (192.168.x)  -> solo misma red
+echo      la de Tailscale (100.x)   funciona desde cualquier lado
+echo      la de Wi-Fi (192.168.x)   solo en la misma red
 echo.
 echo    IMPORTANTE: si la contrasena del administrador
 echo    sigue siendo la de la demo (salon2026), cambiala
