@@ -95,9 +95,15 @@ function banner(info, puerto) {
       // y nadie puede conectarse por ahí.
       const utiles = ips.filter(({ ip }) => !ip.startsWith('169.254.'));
       const mostrar = utiles.length ? utiles : ips;
-      lineas.push('  Para abrir desde otro dispositivo (mismo WiFi):');
+      lineas.push('  Para abrir desde otro dispositivo:');
       for (const { ip, interfaz } of mostrar) {
-        lineas.push(`    http://${ip}:${PUERTO}   (${interfaz})`);
+        // Tailscale da una IP fija que funciona desde cualquier lado;
+        // la de WiFi solo sirve dentro de la misma red.
+        const esTailscale = ip.startsWith('100.') || /tailscale/i.test(interfaz);
+        const detalle = esTailscale
+          ? 'Tailscale · funciona desde cualquier lado'
+          : `${interfaz} · solo en la misma red`;
+        lineas.push(`    http://${ip}:${PUERTO}   (${detalle})`);
       }
       lineas.push('');
     }

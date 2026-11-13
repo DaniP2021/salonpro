@@ -14,13 +14,15 @@ if "%SALON_PORT%"=="" set SALON_PORT=8000
 
 echo.
 echo   ==================================================
-echo    SalonPro abierto a la red local
+echo    SalonPro abierto a la red
 echo.
-echo    En esta PC:        http://127.0.0.1:%SALON_PORT%
-echo    Desde el celular:  mira la linea "http://192.168..."
-echo                       que aparece abajo, y escribila
-echo                       en el navegador del telefono.
-echo                       (los dos en la MISMA red WiFi)
+echo    En esta PC:    http://127.0.0.1:%SALON_PORT%
+echo.
+echo    Las direcciones para otros dispositivos aparecen
+echo    mas abajo, despues del logo. Hay dos tipos:
+echo.
+echo      la de Tailscale (100.x)  -> desde cualquier lado
+echo      la de Wi-Fi (192.168.x)  -> solo misma red
 echo.
 echo    IMPORTANTE: si la contrasena del administrador
 echo    sigue siendo la de la demo (salon2026), cambiala
