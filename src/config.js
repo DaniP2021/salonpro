@@ -79,4 +79,9 @@ export const CONFIG_POR_DEFECTO = {
   reserva_publica_max_dias: '45',
   reserva_requiere_confirmacion: '1',
   mensaje_bienvenida: '',
+  // Correo
+  correo_activo: '0',
+  correo_confirmacion_cliente: '1',
+  correo_aviso_profesional: '1',
+  correo_recordatorio: '1',
 };

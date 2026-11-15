@@ -52,6 +52,17 @@ export async function montar(contenedor, ctx) {
       pista: 'Se programa solo al crear el turno.',
     },
     { clave: 'recordatorio_2h', label: 'Recordatorio 2 h antes', tipo: 'check' },
+    {
+      clave: 'correo_activo', label: 'Enviar correos automáticos', tipo: 'check',
+      pista: 'Requiere una cuenta configurada en Correo. Si el cliente no tiene email, no se envía nada.',
+    },
+    {
+      clave: 'correo_aviso_profesional', label: 'Avisar al profesional por correo', tipo: 'check',
+      pista: 'Usa el email de su ficha en Equipo.',
+    },
+    {
+      clave: 'correo_recordatorio', label: 'Recordatorio por correo (24 h)', tipo: 'check',
+    },
   ], ajustes);
 
   const tarjetaNegocio = el('div', { clase: 'tarjeta' },
@@ -70,6 +81,9 @@ export async function montar(contenedor, ctx) {
                 ...valores,
                 recordatorio_24h: valores.recordatorio_24h ? '1' : '0',
                 recordatorio_2h: valores.recordatorio_2h ? '1' : '0',
+                correo_activo: valores.correo_activo ? '1' : '0',
+                correo_aviso_profesional: valores.correo_aviso_profesional ? '1' : '0',
+                correo_recordatorio: valores.correo_recordatorio ? '1' : '0',
               });
               estado.negocio = { ...estado.negocio, ...respuesta.ajustes };
               aviso('Configuración guardada');

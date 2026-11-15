@@ -335,3 +335,54 @@ CREATE TABLE IF NOT EXISTS wa_eventos (
   payload     TEXT NOT NULL,
   recibido_en TEXT NOT NULL
 );
+
+-- ------------------------------------------------------------------ correo
+
+CREATE TABLE IF NOT EXISTS correo_cuentas (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  etiqueta         TEXT NOT NULL,
+  proveedor        TEXT NOT NULL DEFAULT 'consola'
+                   CHECK (proveedor IN ('consola', 'smtp', 'api')),
+  servidor         TEXT NOT NULL DEFAULT '',
+  puerto           INTEGER NOT NULL DEFAULT 587,
+  seguridad        TEXT NOT NULL DEFAULT 'starttls'
+                   CHECK (seguridad IN ('tls', 'starttls', 'ninguna')),
+  usuario          TEXT NOT NULL DEFAULT '',
+  remitente        TEXT NOT NULL DEFAULT '',
+  nombre_remitente TEXT NOT NULL DEFAULT '',
+  api_url          TEXT NOT NULL DEFAULT '',
+  -- Nombre de la variable de entorno con la clave. Nunca la clave.
+  clave_env        TEXT NOT NULL DEFAULT '',
+  activo           INTEGER NOT NULL DEFAULT 1,
+  creado_en        TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS correo_plantillas (
+  clave  TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  asunto TEXT NOT NULL,
+  cuerpo TEXT NOT NULL,
+  activo INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS correos (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  cuenta_id        INTEGER REFERENCES correo_cuentas(id) ON DELETE SET NULL,
+  turno_id         INTEGER REFERENCES turnos(id) ON DELETE SET NULL,
+  cliente_id       INTEGER REFERENCES clientes(id) ON DELETE SET NULL,
+  para             TEXT NOT NULL,
+  asunto           TEXT NOT NULL,
+  cuerpo           TEXT NOT NULL,
+  plantilla        TEXT NOT NULL DEFAULT '',
+  estado           TEXT NOT NULL DEFAULT 'en_cola'
+                   CHECK (estado IN ('en_cola', 'enviado', 'fallido', 'cancelado')),
+  proveedor        TEXT NOT NULL DEFAULT '',
+  proveedor_msg_id TEXT NOT NULL DEFAULT '',
+  intentos         INTEGER NOT NULL DEFAULT 0,
+  ultimo_error     TEXT NOT NULL DEFAULT '',
+  programado_para  TEXT NOT NULL DEFAULT '',
+  creado_en        TEXT NOT NULL,
+  enviado_en       TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS ix_correos_cola ON correos(estado, programado_para);
+CREATE INDEX IF NOT EXISTS ix_correos_turno ON correos(turno_id);

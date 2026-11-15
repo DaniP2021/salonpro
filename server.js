@@ -20,6 +20,7 @@ import { cerrar, inicializar } from './src/db.js';
 import { manejarPeticion } from './src/router.js';
 import { registrarTodo } from './src/rutas/indice.js';
 import { procesarCola } from './src/dominio/whatsapp.js';
+import { procesarCola as procesarColaCorreo } from './src/dominio/correo.js';
 
 /** Crea el servidor HTTP con todas las rutas registradas. */
 export function crearServidor() {
@@ -60,6 +61,12 @@ export function iniciar(opciones = {}) {
           if (enviados.length) console.log(`[whatsapp] ${enviados.length} mensaje(s) procesados de la cola`);
         })
         .catch((error) => console.error('[whatsapp] error al procesar la cola:', error.message));
+
+      procesarColaCorreo()
+        .then((enviados) => {
+          if (enviados.length) console.log(`[correo] ${enviados.length} correo(s) procesados de la cola`);
+        })
+        .catch((error) => console.error('[correo] error al procesar la cola:', error.message));
     }, INTERVALO_DESPACHO_MS);
     temporizador.unref?.();
   }

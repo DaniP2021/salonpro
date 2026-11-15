@@ -306,9 +306,29 @@ async function main() {
     recargar() {},
   };
 
+  /**
+   * Fecha de un día con turnos, para que la agenda no dependa de que hoy
+   * haya actividad (los domingos el salón cierra y no hay turnos).
+   */
+  const unDiaConTurnos = async () => {
+    const lista = await api.api.get('/api/turnos?desde=2020-01-01%2000:00&hasta=2099-12-31%2023:59&limite=1');
+    return lista.turnos[0] ? lista.turnos[0].inicio.slice(0, 10) : null;
+  };
+
+  /** Próximo día abierto (el salón no trabaja los domingos). */
+  const proximoDiaAbierto = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    while (d.getDay() === 0) d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const vistas = [
     ['hoy', 'public/js/vistas/hoy.js', {}, ['Turnos de hoy', 'Cobrado hoy', 'Próximos turnos']],
-    ['agenda (día)', 'public/js/vistas/agenda.js', {}, ['Día', 'Semana', 'Hoy', 'Pendiente']],
+    ['agenda (día)', 'public/js/vistas/agenda.js', {}, ['Día', 'Semana', 'Hoy', 'Pendiente'], async () => {
+      const dia = await unDiaConTurnos();
+      if (dia) estado.agenda.fecha = dia;
+    }],
     ['turnos', 'public/js/vistas/turnos.js', {}, ['Desde', 'Hasta', 'Estado', 'Profesional']],
     ['clientes', 'public/js/vistas/clientes.js', {}, ['Cliente', 'Visitas', 'Gastado']],
     ['catálogo', 'public/js/vistas/catalogo.js', {}, ['Servicios', 'Productos', 'Categorías']],
@@ -316,12 +336,14 @@ async function main() {
     ['caja', 'public/js/vistas/caja.js', {}, ['Cobrado', 'Por método de pago', 'Por profesional']],
     ['reportes', 'public/js/vistas/reportes.js', {}, ['Ingreso del local', 'Reparto por profesional', 'Ticket promedio']],
     ['whatsapp', 'public/js/vistas/whatsapp.js', {}, ['Estado de la integración', 'Bandeja', 'Plantillas']],
+    ['correo', 'public/js/vistas/correo.js', {}, ['Estado del envío', 'Bandeja', 'Plantillas']],
     ['ajustes', 'public/js/vistas/ajustes.js', {}, ['Datos del negocio', 'Horario del local', 'Usuarios del sistema']],
   ];
 
-  for (const [nombre, archivo, params, esperados] of vistas) {
+  for (const [nombre, archivo, params, esperados, preparar] of vistas) {
     await probar(`Vista ${nombre}`, async () => {
       documento.body = new Nodo('body');
+      if (preparar) await preparar();
       const modulo = await import(pathToFileURL(path.resolve(archivo)).href);
       if (typeof modulo.montar !== 'function') throw new Error('el módulo no exporta montar()');
       const contenedor = new Nodo('main');
@@ -378,7 +400,11 @@ async function main() {
   await probar('Alta de turno (formulario)', async () => {
     documento.body = new Nodo('body');
     // Con un servicio elegido se dispara además la consulta de disponibilidad.
-    const hoja = await turnoUi.abrirNuevoTurno({ servicioId: estado.servicios[0].id });
+    // Se pide un día futuro abierto: hoy podría estar cerrado o sin horarios.
+    const hoja = await turnoUi.abrirNuevoTurno({
+      servicioId: estado.servicios[0].id,
+      fecha: proximoDiaAbierto(),
+    });
     if (!hoja) throw new Error('no devolvió la hoja');
     const datos = contar(hoja.cuerpo);
     const chips = hoja.cuerpo.querySelectorAll('.opcion').length;
@@ -391,7 +417,9 @@ async function main() {
 
   await probar('Ficha de turno (detalle)', async () => {
     documento.body = new Nodo('body');
-    const lista = await api.api.get('/api/turnos?limite=1');
+    // Rango amplio: hoy puede no haber turnos (por ejemplo, un domingo).
+    const lista = await api.api.get('/api/turnos?desde=2020-01-01%2000:00&hasta=2099-12-31%2023:59&limite=1');
+    if (!lista.turnos.length) throw new Error('no hay ningún turno para abrir');
     const turno = lista.turnos[0];
     const hoja = await turnoUi.abrirTurno(turno.id, {});
     if (!hoja) throw new Error('no devolvió la hoja');
@@ -520,7 +548,10 @@ async function main() {
    */
   await probar('El formulario de turno trae horarios y total', async () => {
     documento.body = new Nodo('body');
-    const hoja = await turnoUi.abrirNuevoTurno({ servicioId: estado.servicios[0].id });
+    const hoja = await turnoUi.abrirNuevoTurno({
+      servicioId: estado.servicios[0].id,
+      fecha: proximoDiaAbierto(),
+    });
     const velo = documento.body.children.find((n) => n.classList.contains('velo'));
     if (!velo) throw new Error('no se insertó el velo');
     const caja = velo.children.find((n) => n.classList.contains('hoja'));
@@ -544,7 +575,7 @@ async function main() {
     if (faltanF.length) throw new Error(`faltan en formato.js: ${faltanF.join(', ')}`);
 
     // Todas las vistas deben exportar montar
-    const modulos = ['hoy', 'agenda', 'turnos', 'clientes', 'catalogo', 'equipo', 'caja', 'reportes', 'whatsapp', 'ajustes'];
+    const modulos = ['hoy', 'agenda', 'turnos', 'clientes', 'catalogo', 'equipo', 'caja', 'reportes', 'whatsapp', 'correo', 'ajustes'];
     for (const nombre of modulos) {
       const m = await import(pathToFileURL(path.resolve(`public/js/vistas/${nombre}.js`)).href);
       if (typeof m.montar !== 'function') throw new Error(`vistas/${nombre}.js no exporta montar()`);

@@ -156,3 +156,93 @@ export const PLANTILLAS_BASE = [
     cuerpo: 'Hola {{cliente}}, se liberó un turno hoy a las {{hora}} con {{profesional}} en {{negocio}}. ¿Lo querés?',
   },
 ];
+
+// Plantillas de correo por defecto. Texto plano: se envía como text/plain,
+// que es lo que llega bien a todos los clientes de correo.
+// Variables: {{cliente}} {{cliente_completo}} {{negocio}} {{profesional}}
+//            {{fecha}} {{hora}} {{servicios}} {{direccion}} {{telefono}}
+//            {{total}} {{notas}}
+export const CORREO_PLANTILLAS_BASE = [
+  {
+    clave: 'turno_confirmacion',
+    nombre: 'Confirmación de turno (cliente)',
+    asunto: 'Tu turno en {{negocio}} · {{fecha}} {{hora}}',
+    cuerpo: [
+      'Hola {{cliente}}:',
+      '',
+      'Te confirmamos tu turno en {{negocio}}.',
+      '',
+      '  Fecha:       {{fecha}}',
+      '  Hora:        {{hora}}',
+      '  Servicios:   {{servicios}}',
+      '  Profesional: {{profesional}}',
+      '  Dirección:   {{direccion}}',
+      '',
+      'Si necesitás reprogramar, respondé este correo o llamanos al {{telefono}}.',
+      '',
+      '¡Gracias!',
+      '{{negocio}}',
+    ].join('\n'),
+  },
+  {
+    clave: 'recordatorio_24h',
+    nombre: 'Recordatorio 24 h antes',
+    asunto: 'Recordatorio: tu turno es mañana en {{negocio}}',
+    cuerpo: [
+      'Hola {{cliente}}:',
+      '',
+      'Te recordamos tu turno de mañana.',
+      '',
+      '  Fecha:       {{fecha}}',
+      '  Hora:        {{hora}}',
+      '  Servicios:   {{servicios}}',
+      '  Profesional: {{profesional}}',
+      '',
+      'Te esperamos en {{direccion}}.',
+      '{{negocio}}',
+    ].join('\n'),
+  },
+  {
+    clave: 'turno_cancelado',
+    nombre: 'Turno cancelado',
+    asunto: 'Tu turno del {{fecha}} fue cancelado',
+    cuerpo: [
+      'Hola {{cliente}}:',
+      '',
+      'Cancelamos tu turno del {{fecha}} a las {{hora}}.',
+      '',
+      'Si querés reprogramarlo, respondé este correo y lo vemos.',
+      '{{negocio}}',
+    ].join('\n'),
+  },
+  {
+    clave: 'aviso_profesional',
+    nombre: 'Aviso de turno al profesional',
+    asunto: 'Nuevo turno: {{cliente_completo}} · {{fecha}} {{hora}}',
+    cuerpo: [
+      'Hola {{profesional}}:',
+      '',
+      'Se te asignó un turno nuevo.',
+      '',
+      '  Cliente:   {{cliente_completo}}',
+      '  Fecha:     {{fecha}}',
+      '  Hora:      {{hora}}',
+      '  Servicios: {{servicios}}',
+      '',
+      '{{notas}}',
+    ].join('\n'),
+  },
+  {
+    clave: 'gracias_visita',
+    nombre: 'Agradecimiento post visita',
+    asunto: 'Gracias por tu visita a {{negocio}}',
+    cuerpo: [
+      'Hola {{cliente}}:',
+      '',
+      'Gracias por venir. Ojalá hayas quedado conforme.',
+      '',
+      'Cuando quieras volver, escribinos y te reservamos con {{profesional}}.',
+      '{{negocio}}',
+    ].join('\n'),
+  },
+];

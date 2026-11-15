@@ -15,6 +15,7 @@ import * as vistaEquipo from './vistas/equipo.js';
 import * as vistaCaja from './vistas/caja.js';
 import * as vistaReportes from './vistas/reportes.js';
 import * as vistaWhatsapp from './vistas/whatsapp.js';
+import * as vistaCorreo from './vistas/correo.js';
 import * as vistaAjustes from './vistas/ajustes.js';
 
 const RAIZ = document.getElementById('raiz');
@@ -46,6 +47,7 @@ const MENU = [
       { clave: 'catalogo', texto: 'Catálogo', icono: 'catalogo', ruta: '#/catalogo', soloGestion: true },
       { clave: 'equipo', texto: 'Equipo', icono: 'equipo', ruta: '#/equipo', soloGestion: true },
       { clave: 'whatsapp', texto: 'WhatsApp', icono: 'whatsapp', ruta: '#/whatsapp' },
+      { clave: 'correo', texto: 'Correo', icono: 'sobre', ruta: '#/correo' },
       { clave: 'ajustes', texto: 'Ajustes', icono: 'ajustes', ruta: '#/ajustes' },
     ],
   },
@@ -62,6 +64,7 @@ const RUTAS = [
   { prueba: /^#\/caja\/?$/, vista: vistaCaja },
   { prueba: /^#\/reportes\/?$/, vista: vistaReportes },
   { prueba: /^#\/whatsapp\/?$/, vista: vistaWhatsapp },
+  { prueba: /^#\/correo\/?$/, vista: vistaCorreo },
   { prueba: /^#\/ajustes\/?$/, vista: vistaAjustes },
 ];
 

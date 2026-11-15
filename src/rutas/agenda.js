@@ -6,6 +6,41 @@ import { ErrorApp, ahoraTexto, entero, hoyTexto, sumarDias } from '../util.js';
 import { ROL_TODOS, actor, profesionalPermitido } from './_comun.js';
 import * as agenda from '../dominio/agenda.js';
 import * as whatsapp from '../dominio/whatsapp.js';
+import * as correo from '../dominio/correo.js';
+
+/**
+ * Envía los correos del turno: confirmación al cliente y aviso al profesional.
+ * Nunca hace fallar el alta: si falta un email, devuelve el motivo.
+ */
+async function dispararCorreo(turnoId) {
+  const resultado = { cliente: null, profesional: null };
+  try {
+    const alCliente = correo.encolarParaTurno(turnoId, { plantilla: 'turno_confirmacion' });
+    if (alCliente.correo) {
+      const envio = await correo.enviarPendiente(alCliente.correo.id);
+      const fila = db.uno('SELECT estado, ultimo_error FROM correos WHERE id = ?', [alCliente.correo.id]);
+      resultado.cliente = { id: alCliente.correo.id, estado: fila?.estado, error: fila?.ultimo_error || envio?.error || null };
+    } else {
+      resultado.cliente = { omitido: alCliente.omitido };
+    }
+
+    if (db.leerAjuste('correo_aviso_profesional', '1') === '1') {
+      const alProfesional = correo.avisarAlProfesional(turnoId);
+      if (alProfesional.correo) {
+        await correo.enviarPendiente(alProfesional.correo.id);
+        const fila = db.uno('SELECT estado, ultimo_error FROM correos WHERE id = ?', [alProfesional.correo.id]);
+        resultado.profesional = { id: alProfesional.correo.id, estado: fila?.estado, error: fila?.ultimo_error || null };
+      } else {
+        resultado.profesional = { omitido: alProfesional.omitido };
+      }
+    }
+
+    correo.programarRecordatorio(turnoId);
+  } catch (error) {
+    resultado.error = error.message;
+  }
+  return resultado;
+}
 
 /** Carga un turno verificando que el profesional solo toque los suyos. */
 function turnoDelAlcance(ctx, id) {
@@ -114,7 +149,19 @@ export function registrar() {
     } else {
       whatsapp.programarRecordatorios(turno.id);
     }
-    return creado({ turno: agenda.obtenerTurno(turno.id), whatsapp: envio });
+
+    // Correo: solo si está activado en Ajustes. Si el cliente o el profesional
+    // no tienen email, se devuelve el motivo en vez de fallar el alta.
+    let correoEnvio = null;
+    if (db.leerAjuste('correo_activo', '0') === '1') {
+      correoEnvio = await dispararCorreo(turno.id);
+    }
+
+    return creado({
+      turno: agenda.obtenerTurno(turno.id),
+      whatsapp: envio,
+      correo: correoEnvio,
+    });
   }, { roles: ROL_TODOS });
 
   PUT('/api/turnos/{id:num}', (ctx) => {

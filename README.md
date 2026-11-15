@@ -63,6 +63,7 @@ Cuentas de la demo:
 | **Caja** | Arqueo del día por método, por concepto, por profesional y por quién cobró |
 | **Reportes** | Tablero del período, reparto por profesional, liquidación, rankings y deudas |
 | **WhatsApp** | Cuentas por profesional, bandeja con acuse de entrega/lectura, plantillas y webhook |
+| **Correo** | Cuenta SMTP o API, plantillas de email, bandeja de salida y correo de prueba |
 | **Ajustes** | Datos del negocio, horarios del local, usuarios y contraseña |
 
 ### El modelo de comisiones, que es el corazón
@@ -100,6 +101,27 @@ el proveedor no informó. Por eso la confirmación del turno se puede dar por tr
 "1" por WhatsApp, clic en el enlace firmado que va en el mensaje, o confirmación manual del equipo.
 
 Detalle completo en [docs/WHATSAPP.md](docs/WHATSAPP.md).
+
+### Correo
+
+Tres modos, igual que WhatsApp:
+
+| Modo | Qué hace |
+|---|---|
+| `consola` | Deja el correo en la bandeja con su texto listo para copiar |
+| `smtp` | Envía por el servidor SMTP del salón (Gmail, Zoho, hosting propio) |
+| `api` | POST a una API HTTP de correo (Resend y similares) |
+
+La contraseña **nunca** se guarda en la base: la app guarda el nombre de la variable de entorno que
+la contiene. Sin credenciales funciona igual, en modo consola. Si un envío falla, el mensaje queda en
+*fallido* con el error del servidor, no como enviado.
+
+Qué manda la app: confirmación al cliente al crear el turno, aviso al profesional en su propio
+email, y recordatorio 24 h antes. Si el cliente o el profesional no tienen email cargado, no se
+envía nada y el alta del turno no falla.
+
+Guía de configuración paso a paso, con los datos de cada proveedor:
+[docs/MENSAJERIA.md](docs/MENSAJERIA.md).
 
 ---
 

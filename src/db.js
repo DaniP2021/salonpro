@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG_POR_DEFECTO, RUTA_DB, asegurarDirectorios } from './config.js';
 import { ahoraTexto } from './util.js';
 import { hashClave } from './security.js';
-import { PLANTILLAS_BASE, CATALOGO_BASE, HORARIOS_BASE } from './presets.js';
+import { PLANTILLAS_BASE, CATALOGO_BASE, HORARIOS_BASE, CORREO_PLANTILLAS_BASE } from './presets.js';
 
 const DIR_SRC = path.dirname(fileURLToPath(import.meta.url));
 
@@ -185,6 +185,17 @@ export function inicializar(ruta = RUTA_DB) {
     transaccion(() => {
       for (const p of PLANTILLAS_BASE) {
         insertar('wa_plantillas', { clave: p.clave, nombre: p.nombre, cuerpo: p.cuerpo, activo: 1 });
+      }
+    });
+  }
+
+  // Plantillas de correo por defecto.
+  if (numero('SELECT COUNT(*) FROM correo_plantillas') === 0) {
+    transaccion(() => {
+      for (const p of CORREO_PLANTILLAS_BASE) {
+        insertar('correo_plantillas', {
+          clave: p.clave, nombre: p.nombre, asunto: p.asunto, cuerpo: p.cuerpo, activo: 1,
+        });
       }
     });
   }
