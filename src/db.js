@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG_POR_DEFECTO, RUTA_DB, asegurarDirectorios } from './config.js';
 import { ahoraTexto } from './util.js';
 import { hashClave } from './security.js';
-import { PLANTILLAS_BASE, CATALOGO_BASE, HORARIOS_BASE, CORREO_PLANTILLAS_BASE } from './presets.js';
+import { PLANTILLAS_BASE, CATALOGO_BASE, HORARIOS_BASE, CORREO_PLANTILLAS_BASE, EGRESO_CATEGORIAS_BASE } from './presets.js';
 
 const DIR_SRC = path.dirname(fileURLToPath(import.meta.url));
 
@@ -197,6 +197,15 @@ export function inicializar(ruta = RUTA_DB) {
           clave: p.clave, nombre: p.nombre, asunto: p.asunto, cuerpo: p.cuerpo, activo: 1,
         });
       }
+    });
+  }
+
+  // Categorías de egreso por defecto.
+  if (numero('SELECT COUNT(*) FROM egreso_categorias') === 0) {
+    transaccion(() => {
+      EGRESO_CATEGORIAS_BASE.forEach((nombre, i) => {
+        insertar('egreso_categorias', { nombre, orden: i, activo: 1 });
+      });
     });
   }
 

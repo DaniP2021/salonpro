@@ -544,3 +544,7 @@ table.tabla .secundario { color: var(--texto-suave); font-size: 12.5px; display:
   .agenda-cab .col { min-width: 132px; }
   .agenda-col { min-width: 132px; }
 }
+
+/* Barra de comparacion usada en Egresos (cobrado vs. gastado). */
+.progreso.roja i { background: linear-gradient(90deg, #dcb0a9, var(--ausente)); }
+

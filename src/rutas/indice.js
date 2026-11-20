@@ -11,9 +11,10 @@ import * as caja from './caja.js';
 import * as reportes from './reportes.js';
 import * as whatsapp from './whatsapp.js';
 import * as correo from './correo.js';
+import * as egresos from './egresos.js';
 import * as publico from './publico.js';
 
-const MODULOS = [auth, negocio, usuarios, equipo, catalogo, clientes, agenda, caja, reportes, whatsapp, correo, publico];
+const MODULOS = [auth, negocio, usuarios, equipo, catalogo, clientes, agenda, caja, reportes, whatsapp, correo, egresos, publico];
 
 let registrado = false;
 

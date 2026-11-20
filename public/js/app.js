@@ -13,6 +13,7 @@ import * as vistaClientes from './vistas/clientes.js';
 import * as vistaCatalogo from './vistas/catalogo.js';
 import * as vistaEquipo from './vistas/equipo.js';
 import * as vistaCaja from './vistas/caja.js';
+import * as vistaEgresos from './vistas/egresos.js';
 import * as vistaReportes from './vistas/reportes.js';
 import * as vistaWhatsapp from './vistas/whatsapp.js';
 import * as vistaCorreo from './vistas/correo.js';
@@ -38,6 +39,7 @@ const MENU = [
     grupo: 'Gestión',
     items: [
       { clave: 'caja', texto: 'Caja y cobros', icono: 'caja', ruta: '#/caja' },
+      { clave: 'egresos', texto: 'Egresos', icono: 'egresos', ruta: '#/egresos', soloGestion: true },
       { clave: 'reportes', texto: 'Reportes', icono: 'reportes', ruta: '#/reportes' },
     ],
   },
@@ -62,6 +64,7 @@ const RUTAS = [
   { prueba: /^#\/catalogo\/?$/, vista: vistaCatalogo },
   { prueba: /^#\/equipo\/?$/, vista: vistaEquipo },
   { prueba: /^#\/caja\/?$/, vista: vistaCaja },
+  { prueba: /^#\/egresos\/?$/, vista: vistaEgresos },
   { prueba: /^#\/reportes\/?$/, vista: vistaReportes },
   { prueba: /^#\/whatsapp\/?$/, vista: vistaWhatsapp },
   { prueba: /^#\/correo\/?$/, vista: vistaCorreo },

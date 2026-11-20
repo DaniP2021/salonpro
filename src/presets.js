@@ -246,3 +246,15 @@ export const CORREO_PLANTILLAS_BASE = [
     ].join('\n'),
   },
 ];
+
+// Categorías de egreso por defecto. Se pueden renombrar, desactivar o ampliar
+// desde la pantalla de Egresos; esto es solo el punto de partida de un salón.
+export const EGRESO_CATEGORIAS_BASE = [
+  'Alquiler',
+  'Sueldos y comisiones',
+  'Insumos y productos',
+  'Servicios (luz, agua, internet)',
+  'Mantenimiento',
+  'Impuestos',
+  'Otros',
+];

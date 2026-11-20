@@ -334,6 +334,7 @@ async function main() {
     ['catálogo', 'public/js/vistas/catalogo.js', {}, ['Servicios', 'Productos', 'Categorías']],
     ['equipo', 'public/js/vistas/equipo.js', {}, ['Comisión servicios', 'Bloqueos de agenda']],
     ['caja', 'public/js/vistas/caja.js', {}, ['Cobrado', 'Por método de pago', 'Por profesional']],
+    ['egresos', 'public/js/vistas/egresos.js', {}, ['Egresos del período', 'Gastos fijos', 'Por categoría']],
     ['reportes', 'public/js/vistas/reportes.js', {}, ['Ingreso del local', 'Reparto por profesional', 'Ticket promedio']],
     ['whatsapp', 'public/js/vistas/whatsapp.js', {}, ['Estado de la integración', 'Bandeja', 'Plantillas']],
     ['correo', 'public/js/vistas/correo.js', {}, ['Estado del envío', 'Bandeja', 'Plantillas']],
@@ -575,7 +576,7 @@ async function main() {
     if (faltanF.length) throw new Error(`faltan en formato.js: ${faltanF.join(', ')}`);
 
     // Todas las vistas deben exportar montar
-    const modulos = ['hoy', 'agenda', 'turnos', 'clientes', 'catalogo', 'equipo', 'caja', 'reportes', 'whatsapp', 'correo', 'ajustes'];
+    const modulos = ['hoy', 'agenda', 'turnos', 'clientes', 'catalogo', 'equipo', 'caja', 'egresos', 'reportes', 'whatsapp', 'correo', 'ajustes'];
     for (const nombre of modulos) {
       const m = await import(pathToFileURL(path.resolve(`public/js/vistas/${nombre}.js`)).href);
       if (typeof m.montar !== 'function') throw new Error(`vistas/${nombre}.js no exporta montar()`);

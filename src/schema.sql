@@ -386,3 +386,34 @@ CREATE TABLE IF NOT EXISTS correos (
 );
 CREATE INDEX IF NOT EXISTS ix_correos_cola ON correos(estado, programado_para);
 CREATE INDEX IF NOT EXISTS ix_correos_turno ON correos(turno_id);
+
+-- ---------------------------------------------------------------- egresos
+
+CREATE TABLE IF NOT EXISTS egreso_categorias (
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL UNIQUE,
+  orden  INTEGER NOT NULL DEFAULT 0,
+  activo INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS egresos (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  fecha            TEXT NOT NULL,
+  categoria_id     INTEGER REFERENCES egreso_categorias(id) ON DELETE SET NULL,
+  descripcion      TEXT NOT NULL,
+  monto_centavos   INTEGER NOT NULL,
+  metodo           TEXT NOT NULL DEFAULT 'efectivo'
+                   CHECK (metodo IN ('efectivo', 'transferencia', 'tarjeta', 'mercadopago', 'otro')),
+  -- Opcional: gasto imputado a un profesional (insumos que consumió, etc.)
+  profesional_id   INTEGER REFERENCES profesionales(id) ON DELETE SET NULL,
+  comprobante      TEXT NOT NULL DEFAULT '',
+  nota             TEXT NOT NULL DEFAULT '',
+  -- Gasto que se repite todos los meses (alquiler, servicios)
+  fijo             INTEGER NOT NULL DEFAULT 0,
+  anulado          INTEGER NOT NULL DEFAULT 0,
+  motivo_anulacion TEXT NOT NULL DEFAULT '',
+  creado_en        TEXT NOT NULL,
+  creado_por       INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS ix_egresos_fecha ON egresos(fecha);
+CREATE INDEX IF NOT EXISTS ix_egresos_categoria ON egresos(categoria_id);

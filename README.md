@@ -61,6 +61,7 @@ Cuentas de la demo:
 | **Catálogo** | Servicios por categoría y público (hombre/mujer/unisex); productos con costo y stock |
 | **Equipo** | Profesionales con su modalidad de reparto, horario propio, bloqueos y alquiler del espacio |
 | **Caja** | Arqueo del día por método, por concepto, por profesional y por quién cobró |
+| **Egresos** | Gastos del salón por categoría, fijos y variables, imputables a un profesional; resultado del período |
 | **Reportes** | Tablero del período, reparto por profesional, liquidación, rankings y deudas |
 | **WhatsApp** | Cuentas por profesional, bandeja con acuse de entrega/lectura, plantillas y webhook |
 | **Correo** | Cuenta SMTP o API, plantillas de email, bandeja de salida y correo de prueba |
