@@ -128,6 +128,10 @@ async function ficha(contenedor, ctx, id) {
       esGestion() || estado.usuario.rol === 'profesional'
         ? boton('Editar', { clase: '', icono: 'ajustes', on: () => formularioCliente(cliente, () => ctx.recargar()) })
         : null,
+      boton('Conversación', {
+        clase: '', icono: 'mensajes',
+        on: () => ctx.navegar(`#/mensajes/${cliente.id}`),
+      }),
       boton('Nuevo turno', {
         clase: 'laton', icono: 'mas',
         on: () => abrirNuevoTurno({ clienteId: cliente.id, fecha: hoyISO(), alCrear: () => ctx.recargar() }),

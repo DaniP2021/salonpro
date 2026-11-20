@@ -548,3 +548,71 @@ table.tabla .secundario { color: var(--texto-suave); font-size: 12.5px; display:
 /* Barra de comparacion usada en Egresos (cobrado vs. gastado). */
 .progreso.roja i { background: linear-gradient(90deg, #dcb0a9, var(--ausente)); }
 
+/* ------------------------------------------------------------------ mensajes */
+
+.mensajes { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .mensajes { grid-template-columns: 1fr; } }
+
+.conv-lista { overflow: hidden; display: flex; flex-direction: column; max-height: 68vh; }
+.conv-filtros { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--borde); }
+.conv-vacio { padding: 18px 14px; }
+.conv-items { overflow: auto; flex: 1; }
+
+.conv-item {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--borde); padding: 9px 12px;
+  font: inherit; color: inherit;
+}
+.conv-item:hover { background: var(--superficie-2); }
+.conv-item.activo { background: var(--superficie-2); border-left-color: var(--laton); }
+.conv-linea { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+.conv-nombre { font-weight: 600; font-size: 13.5px; }
+.conv-hora { font-size: 11px; color: var(--texto-suave); white-space: nowrap; }
+.conv-resumen {
+  font-size: 12px; color: var(--texto-suave); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.conv-item.con-nuevos .conv-nombre { color: var(--carbon); }
+.conv-item.con-nuevos .conv-resumen { color: var(--texto); font-weight: 600; }
+.conv-badge {
+  background: var(--laton); color: #fff; border-radius: 20px;
+  font-size: 10.5px; font-weight: 700; padding: 1px 6px; flex: 0 0 auto;
+}
+.conv-meta { font-size: 10.5px; color: var(--texto-suave); margin-top: 2px; }
+
+.conv-cabecera {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--borde);
+}
+.conv-titulo { font-weight: 600; font-size: 15px; }
+.conv-sub { font-size: 12px; color: var(--texto-suave); }
+.conv-acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.hilo {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 14px; max-height: 52vh; overflow: auto; background: var(--papel);
+}
+.burbuja-fila { display: flex; justify-content: flex-start; }
+.burbuja-fila.derecha { justify-content: flex-end; }
+.burbuja {
+  max-width: 78%; padding: 8px 12px; border-radius: 12px;
+  background: var(--superficie-2); border: 1px solid var(--borde);
+}
+.burbuja.mia { background: #f3e8d4; border-color: #e7d8bd; }
+.burbuja.interna {
+  background: #fdf8ec; border: 1px dashed var(--laton);
+}
+.burbuja-autor { font-size: 10.5px; color: var(--texto-suave); margin-bottom: 3px; }
+.burbuja-texto { font-size: 13.5px; white-space: pre-wrap; }
+.burbuja-hora { font-size: 10px; color: var(--texto-suave); margin-top: 4px; text-align: right; }
+
+.compositor { border-top: 1px solid var(--borde); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.compositor textarea {
+  width: 100%; resize: vertical; font: inherit; font-size: 13.5px;
+  padding: 8px 10px; border: 1px solid var(--borde); border-radius: 9px;
+  background: var(--blanco, #fff); color: inherit;
+}
+.compositor-pie { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.compositor-pie label { display: flex; align-items: center; gap: 6px; color: var(--texto-suave); cursor: pointer; }
+

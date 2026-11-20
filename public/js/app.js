@@ -10,6 +10,7 @@ import * as vistaHoy from './vistas/hoy.js';
 import * as vistaAgenda from './vistas/agenda.js';
 import * as vistaTurnos from './vistas/turnos.js';
 import * as vistaClientes from './vistas/clientes.js';
+import * as vistaMensajes from './vistas/mensajes.js';
 import * as vistaCatalogo from './vistas/catalogo.js';
 import * as vistaEquipo from './vistas/equipo.js';
 import * as vistaCaja from './vistas/caja.js';
@@ -23,7 +24,7 @@ const RAIZ = document.getElementById('raiz');
 
 // Se muestra abajo del menú. Si no coincide con la última entrega, el navegador
 // está usando archivos viejos de la caché.
-const VERSION = '1.3';
+const VERSION = '1.4';
 
 const MENU = [
   {
@@ -33,6 +34,7 @@ const MENU = [
       { clave: 'agenda', texto: 'Agenda', icono: 'agenda', ruta: '#/agenda' },
       { clave: 'turnos', texto: 'Turnos', icono: 'turnos', ruta: '#/turnos' },
       { clave: 'clientes', texto: 'Clientes', icono: 'clientes', ruta: '#/clientes' },
+      { clave: 'mensajes', texto: 'Mensajes', icono: 'mensajes', ruta: '#/mensajes' },
     ],
   },
   {
@@ -61,6 +63,8 @@ const RUTAS = [
   { prueba: /^#\/turnos\/?$/, vista: vistaTurnos },
   { prueba: /^#\/clientes\/(\d+)\/?$/, vista: vistaClientes, params: (m) => ({ clienteId: Number(m[1]) }) },
   { prueba: /^#\/clientes\/?$/, vista: vistaClientes },
+  { prueba: /^#\/mensajes\/(\d+)\/?$/, vista: vistaMensajes, params: (m) => ({ clienteId: Number(m[1]) }) },
+  { prueba: /^#\/mensajes\/?$/, vista: vistaMensajes },
   { prueba: /^#\/catalogo\/?$/, vista: vistaCatalogo },
   { prueba: /^#\/equipo\/?$/, vista: vistaEquipo },
   { prueba: /^#\/caja\/?$/, vista: vistaCaja },
