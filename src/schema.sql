@@ -417,3 +417,46 @@ CREATE TABLE IF NOT EXISTS egresos (
 );
 CREATE INDEX IF NOT EXISTS ix_egresos_fecha ON egresos(fecha);
 CREATE INDEX IF NOT EXISTS ix_egresos_categoria ON egresos(categoria_id);
+
+-- ------------------------------------------------------------- mensajería
+
+-- Una conversación por cliente: el hilo es de la empresa, no del profesional.
+CREATE TABLE IF NOT EXISTS conversaciones (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  cliente_id         INTEGER NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+  asunto             TEXT NOT NULL DEFAULT '',
+  estado             TEXT NOT NULL DEFAULT 'abierta'
+                     CHECK (estado IN ('abierta', 'archivada')),
+  ultimo_mensaje_en  TEXT NOT NULL DEFAULT '',
+  ultimo_mensaje     TEXT NOT NULL DEFAULT '',
+  total_mensajes     INTEGER NOT NULL DEFAULT 0,
+  creado_en          TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_conversacion_cliente ON conversaciones(cliente_id);
+
+CREATE TABLE IF NOT EXISTS mensajes (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversacion_id INTEGER NOT NULL REFERENCES conversaciones(id) ON DELETE CASCADE,
+  autor_tipo      TEXT NOT NULL CHECK (autor_tipo IN ('admin', 'profesional', 'cliente', 'sistema')),
+  autor_id        INTEGER,
+  autor_nombre    TEXT NOT NULL DEFAULT '',
+  cuerpo          TEXT NOT NULL,
+  canal           TEXT NOT NULL DEFAULT 'app'
+                  CHECK (canal IN ('app', 'whatsapp', 'email')),
+  -- Nota interna: la ven administración y el profesional que la escribió.
+  -- Nunca llega al cliente.
+  interno         INTEGER NOT NULL DEFAULT 0,
+  creado_en       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_mensajes_conversacion ON mensajes(conversacion_id, id);
+
+-- Hasta dónde leyó cada participante. Sirve para contar no leídos sin recorrer
+-- toda la tabla ni guardar una fila por mensaje y por lector.
+CREATE TABLE IF NOT EXISTS conversacion_lecturas (
+  conversacion_id  INTEGER NOT NULL REFERENCES conversaciones(id) ON DELETE CASCADE,
+  lector_tipo      TEXT NOT NULL,
+  lector_id        INTEGER NOT NULL,
+  ultimo_leido_id  INTEGER NOT NULL DEFAULT 0,
+  actualizado_en   TEXT NOT NULL,
+  PRIMARY KEY (conversacion_id, lector_tipo, lector_id)
+);
