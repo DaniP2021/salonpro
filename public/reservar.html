@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Reservar turno</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --oro: #c9a96b;
+    --oro-claro: #f6e7c4;
+    --fondo: #0b0a09;
+    --panel: #141110;
+    --texto: #f3ede4;
+    --suave: #a89f92;
+    --tenue: #857c70;
+    --borde: rgba(201,169,107,.28);
+    --borde-suave: rgba(255,255,255,.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; padding: 20px 16px 40px;
+    background: radial-gradient(120% 90% at 50% 0%, #1d1710 0%, var(--fondo) 55%, #060606 100%);
+    color: var(--texto);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  }
+  .caja { width: 100%; max-width: 520px; margin: 0 auto; }
+  .marca {
+    font: 600 11px/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: .28em;
+    text-transform: uppercase; color: var(--oro); margin-bottom: 14px;
+  }
+  h1 {
+    font: 400 26px/1.2 Georgia, "Times New Roman", serif; margin: 0 0 6px;
+    background: linear-gradient(100deg, var(--oro-claro), var(--oro) 60%, #8d6f3a);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: var(--suave); font-size: 14px; margin: 0 0 22px; }
+  .pasos { display: flex; gap: 6px; margin-bottom: 16px; }
+  .pasos i { flex: 1; height: 3px; border-radius: 3px; background: rgba(255,255,255,.12); }
+  .pasos i.hecho { background: var(--oro); }
+  .panel {
+    background: var(--panel); border: 1px solid var(--borde);
+    border-radius: 18px; padding: 18px; margin-bottom: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .panel h2 { font: 600 15px/1.3 ui-sans-serif, system-ui, sans-serif; margin: 0 0 12px; }
+  .opcion {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; text-align: left; cursor: pointer;
+    background: rgba(255,255,255,.03); border: 1px solid var(--borde-suave);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    color: inherit; font: inherit;
+  }
+  .opcion:hover { background: rgba(255,255,255,.06); }
+  .opcion.elegida { border-color: var(--oro); background: rgba(201,169,107,.1); }
+  .opcion .titulo { font-weight: 600; font-size: 14px; }
+  .opcion .meta { color: var(--tenue); font-size: 12px; margin-top: 2px; }
+  .opcion .precio { font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 9px 14px; border-radius: 10px; cursor: pointer;
+    background: rgba(255,255,255,.04); border: 1px solid var(--borde-suave);
+    color: inherit; font: inherit; font-size: 14px; font-weight: 600;
+  }
+  .chip:hover { border-color: var(--oro); }
+  .chip.elegido { background: linear-gradient(100deg, #dbc08a, #b8934f); color: #171310; border-color: transparent; }
+  .grupo { margin-bottom: 14px; }
+  .grupo .rotulo { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--tenue); margin-bottom: 7px; }
+  label { display: block; font-size: 12.5px; color: var(--suave); margin-bottom: 5px; }
+  input[type=text], input[type=tel], input[type=email], input[type=date], textarea {
+    width: 100%; padding: 12px 13px; border-radius: 11px; font: inherit; font-size: 15px;
+    background: rgba(255,255,255,.05); border: 1px solid var(--borde-suave); color: var(--texto);
+    margin-bottom: 12px;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--oro); }
+  textarea { resize: vertical; }
+  .campo-acepta { display: flex; gap: 9px; align-items: flex-start; margin: 4px 0 14px; font-size: 12.5px; color: var(--suave); }
+  .campo-acepta input { margin-top: 2px; }
+  button.principal, button.secundario {
+    width: 100%; border: 0; border-radius: 12px; padding: 15px 18px;
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  button.principal { background: linear-gradient(100deg, #dbc08a, #b8934f); color: #171310; }
+  button.principal:disabled { opacity: .45; cursor: default; }
+  button.secundario { background: rgba(255,255,255,.07); color: #e7dfd2; border: 1px solid var(--borde-suave); }
+  .fila { display: flex; gap: 8px; margin-top: 12px; }
+  .aviso { font-size: 13px; padding: 11px 13px; border-radius: 10px; margin-bottom: 12px; }
+  .aviso.error { background: rgba(190,80,70,.14); border: 1px solid rgba(190,80,70,.4); color: #f0c3bd; }
+  .aviso.ok { background: rgba(90,150,110,.14); border: 1px solid rgba(90,150,110,.4); color: #bfe0cb; }
+  .resumen { display: grid; gap: 9px; margin: 4px 0 16px; }
+  .resumen .linea { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--borde-suave); }
+  .resumen .linea span:first-child { color: var(--tenue); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .resumen .linea span:last-child { font-weight: 600; font-size: 14px; text-align: right; }
+  .vacio { color: var(--tenue); font-size: 13px; text-align: center; padding: 14px 0; }
+  .pie { margin-top: 18px; font-size: 12px; color: #6f6659; text-align: center; line-height: 1.6; }
+  .cargando { text-align: center; padding: 30px 0; color: var(--tenue); font-size: 13px; }
+  .grande { text-align: center; padding: 8px 0 4px; }
+  .grande .icono { font-size: 44px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main class="caja">
+  <div class="marca" id="marca">Reservá tu turno</div>
+  <h1 id="titulo">Elegí tu turno</h1>
+  <p class="sub" id="sub">Paso 1 de 3 · elegí el servicio</p>
+
+  <div class="pasos" id="pasos"><i class="hecho"></i><i></i><i></i></div>
+
+  <div id="contenido">
+    <div class="cargando">Cargando…</div>
+  </div>
+
+  <p class="pie" id="pie"></p>
+</main>
+
+<script type="module">
+const API = '/api/publico';
+let estado = {
+  negocio: null,
+  servicios: [],
+  profesionales: [],
+  paso: 1,
+  servicio: null,
+  profesional: null,
+  fecha: null,
+  disponibilidad: null,
+  inicio: null,
+};
+
+const $ = (id) => document.getElementById(id);
+const contenido = $('contenido');
+
+function h(etiqueta, props = {}, ...hijos) {
+  const nodo = document.createElement(etiqueta);
+  for (const [clave, valor] of Object.entries(props)) {
+    if (clave === 'clase') nodo.className = valor;
+    else if (clave === 'texto') nodo.textContent = valor;
+    else if (clave.startsWith('on')) nodo.addEventListener(clave.slice(2), valor);
+    else nodo.setAttribute(clave, valor);
+  }
+  for (const hijo of hijos.flat()) {
+    if (hijo === null || hijo === undefined || hijo === false) continue;
+    nodo.appendChild(typeof hijo === 'string' ? document.createTextNode(hijo) : hijo);
+  }
+  return nodo;
+}
+
+const dinero = (centavos) => `${estado.negocio?.simbolo || '$'} ${(Number(centavos) / 100).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const minutos = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}` : `${m} min`);
+
+function limpiar() { contenido.replaceChildren(); }
+function aviso(texto, tipo = 'error') {
+  return h('div', { clase: `aviso ${tipo}`, texto });
+}
+
+async function pedir(ruta, opciones) {
+  const r = await fetch(API + ruta, opciones);
+  const datos = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(datos.error || datos.message || 'No pudimos completar la operación.');
+  return datos;
+}
+
+function pintarPasos() {
+  const marcas = $('pasos').querySelectorAll('i');
+  marcas.forEach((m, i) => m.classList.toggle('hecho', i < estado.paso));
+}
+
+function irA(paso) {
+  estado.paso = paso;
+  pintarPasos();
+  if (paso === 1) pintarServicios();
+  if (paso === 2) pintarProfesionales();
+  if (paso === 3) pintarFecha();
+  if (paso === 4) pintarDatos();
+}
+
+// ------------------------------------------------------------------ paso 1
+function pintarServicios() {
+  limpiar();
+  $('sub').textContent = 'Paso 1 de 3 · elegí el servicio';
+
+  const porCategoria = new Map();
+  for (const servicio of estado.servicios) {
+    const clave = servicio.categoria || 'Servicios';
+    if (!porCategoria.has(clave)) porCategoria.set(clave, []);
+    porCategoria.get(clave).push(servicio);
+  }
+
+  for (const [categoria, lista] of porCategoria) {
+    const panel = h('div', { clase: 'panel' }, h('h2', { texto: categoria }));
+    for (const servicio of lista) {
+      panel.appendChild(h('button', {
+        clase: `opcion${estado.servicio?.id === servicio.id ? ' elegida' : ''}`,
+        onClick: () => {
+          estado.servicio = servicio;
+          estado.inicio = null;
+          irA(2);
+        },
+      },
+      h('div', {},
+        h('div', { clase: 'titulo', texto: servicio.nombre }),
+        h('div', { clase: 'meta', texto: `${minutos(servicio.duracion_min)}${servicio.descripcion ? ` · ${servicio.descripcion}` : ''}` })),
+      h('div', { clase: 'precio', texto: dinero(servicio.precio_centavos) })));
+    }
+    contenido.appendChild(panel);
+  }
+
+  if (!estado.servicios.length) {
+    contenido.appendChild(h('div', { clase: 'panel' }, h('p', { clase: 'vacio', texto: 'Todavía no hay servicios cargados.' })));
+  }
+}
+
+// ------------------------------------------------------------------ paso 2
+function pintarProfesionales() {
+  limpiar();
+  $('sub').textContent = 'Paso 2 de 3 · con quién querés atenderte';
+
+  const panel = h('div', { clase: 'panel' }, h('h2', { texto: 'Profesionales' }));
+  for (const profesional of estado.profesionales) {
+    panel.appendChild(h('button', {
+      clase: `opcion${estado.profesional?.id === profesional.id ? ' elegida' : ''}`,
+      onClick: () => {
+        estado.profesional = profesional;
+        irA(3);
+      },
+    },
+    h('div', {},
+      h('div', { clase: 'titulo', texto: profesional.nombre }),
+      profesional.especialidades ? h('div', { clase: 'meta', texto: profesional.especialidades }) : null)));
+  }
+
+  if (!estado.profesionales.length) {
+    panel.appendChild(h('p', { clase: 'vacio', texto: 'No hay profesionales disponibles para reservar.' }));
+  }
+
+  contenido.appendChild(panel);
+  contenido.appendChild(h('div', { clase: 'panel' },
+    h('button', { clase: 'secundario', texto: '← Volver a los servicios', onClick: () => irA(1) })));
+}
+
+// ------------------------------------------------------------------ paso 3
+function fechaHoy() {
+  const d = new Date();
+  const dos = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+}
+
+function fechaLimite() {
+  const d = new Date();
+  d.setDate(d.getDate() + (estado.negocio?.hasta_dias || 45));
+  const dos = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+}
+
+function pintarFecha() {
+  limpiar();
+  $('sub').textContent = 'Paso 3 de 3 · elegí día y horario';
+
+  const panel = h('div', { clase: 'panel' },
+    h('h2', { texto: `${estado.servicio.nombre} con ${estado.profesional.nombre}` }));
+
+  const input = h('input', {
+    type: 'date',
+    min: fechaHoy(),
+    max: fechaLimite(),
+    value: estado.fecha || '',
+  });
+  input.addEventListener('change', () => {
+    estado.fecha = input.value;
+    cargarDisponibilidad();
+  });
+
+  panel.appendChild(h('label', { texto: 'Día' }));
+  panel.appendChild(input);
+  panel.appendChild(h('div', { id: 'horarios', clase: 'grupo' }, h('p', { clase: 'vacio', texto: 'Elegí un día para ver los horarios libres.' })));
+  panel.appendChild(h('button', { clase: 'secundario', texto: '← Volver', onClick: () => irA(2) }));
+
+  contenido.appendChild(panel);
+  if (estado.fecha) input.dispatchEvent(new Event('change'));
+}
+
+async function cargarDisponibilidad() {
+  const zona = $('horarios');
+  if (!zona) return;
+  zona.replaceChildren(h('p', { clase: 'vacio', texto: 'Buscando horarios…' }));
+
+  try {
+    const datos = await pedir(`/disponibilidad?servicio_id=${estado.servicio.id}&profesional_id=${estado.profesional.id}&fecha=${estado.fecha}`);
+    estado.disponibilidad = datos;
+
+    const opcion = datos.opciones.find((o) => o.profesional_id === estado.profesional.id);
+    if (!opcion || !opcion.horas.length) {
+      zona.replaceChildren(
+        h('p', { clase: 'vacio', texto: 'No quedan horarios libres ese día. Probá con otro.' }),
+        ...datos.opciones.filter((o) => o.profesional_id !== estado.profesional.id).map((o) =>
+          h('p', { clase: 'meta', texto: `${o.profesional} sí tiene lugar: ${o.horas.slice(0, 4).join(', ')}` })),
+      );
+      return;
+    }
+
+    zona.replaceChildren();
+    const chips = h('div', { clase: 'chips' });
+    for (const hora of opcion.horas) {
+      chips.appendChild(h('button', {
+        clase: `chip${estado.inicio === hora ? ' elegido' : ''}`,
+        texto: hora.slice(11, 16),
+        onClick: () => {
+          estado.inicio = hora;
+          irA(4);
+        },
+      }));
+    }
+    zona.appendChild(h('div', { clase: 'rotulo', texto: 'Horarios libres' }));
+    zona.appendChild(chips);
+  } catch (error) {
+    zona.replaceChildren(aviso(error.message));
+  }
+}
+
+// ------------------------------------------------------------------ paso 4
+function pintarDatos() {
+  limpiar();
+  $('sub').textContent = 'Último paso · tus datos';
+
+  const panel = h('div', { clase: 'panel' }, h('h2', { texto: 'Confirmá tus datos' }));
+
+  panel.appendChild(h('div', { clase: 'resumen' },
+    h('div', { clase: 'linea' }, h('span', { texto: 'Servicio' }), h('span', { texto: estado.servicio.nombre })),
+    h('div', { clase: 'linea' }, h('span', { texto: 'Profesional' }), h('span', { texto: estado.profesional.nombre })),
+    h('div', { clase: 'linea' }, h('span', { texto: 'Día y hora' }), h('span', { texto: `${estado.fecha.split('-').reverse().join('/')} a las ${estado.inicio.slice(11, 16)}` })),
+    h('div', { clase: 'linea' }, h('span', { texto: 'Valor' }), h('span', { texto: dinero(estado.servicio.precio_centavos) }))));
+
+  const nombre = h('input', { type: 'text', placeholder: 'Nombre y apellido', autocomplete: 'name' });
+  const telefono = h('input', { type: 'tel', placeholder: 'Teléfono con característica', autocomplete: 'tel' });
+  const email = h('input', { type: 'email', placeholder: 'Email (opcional)', autocomplete: 'email' });
+  const notas = h('textarea', { rows: 2, placeholder: 'Algo que quieras avisarnos (opcional)' });
+
+  panel.appendChild(h('label', { texto: 'Nombre' }));
+  panel.appendChild(nombre);
+  panel.appendChild(h('label', { texto: 'Teléfono' }));
+  panel.appendChild(telefono);
+  panel.appendChild(h('label', { texto: 'Email (opcional)' }));
+  panel.appendChild(email);
+  panel.appendChild(h('label', { texto: 'Comentario (opcional)' }));
+  panel.appendChild(notas);
+
+  const zonaAviso = h('div', {});
+  const acepta = h('input', { type: 'checkbox' });
+  const enviar = h('button', { clase: 'principal', texto: 'Confirmar reserva' });
+
+  panel.appendChild(h('label', { clase: 'campo-acepta' },
+    acepta,
+    h('span', { texto: 'Acepto que el salón guarde mis datos para gestionar el turno y me contacte por WhatsApp o email.' })));
+
+  panel.appendChild(zonaAviso);
+  panel.appendChild(enviar);
+  panel.appendChild(h('div', { clase: 'fila' },
+    h('button', { clase: 'secundario', texto: '← Volver', onClick: () => irA(3) })));
+
+  enviar.addEventListener('click', async () => {
+    zonaAviso.replaceChildren();
+    if (nombre.value.trim().length < 2) { zonaAviso.replaceChildren(aviso('Escribí tu nombre.')); return; }
+    if (telefono.value.trim().length < 6) { zonaAviso.replaceChildren(aviso('Necesitamos un teléfono de contacto.')); return; }
+    if (!acepta.checked) { zonaAviso.replaceChildren(aviso('Necesitamos que aceptes el uso de tus datos para el turno.')); return; }
+
+    enviar.disabled = true;
+    enviar.textContent = 'Reservando…';
+    try {
+      const r = await pedir('/turnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          servicio_id: estado.servicio.id,
+          profesional_id: estado.profesional.id,
+          inicio: estado.inicio,
+          nombre: nombre.value.trim(),
+          telefono: telefono.value.trim(),
+          email: email.value.trim(),
+          notas: notas.value.trim(),
+        }),
+      });
+      pintarExito(r);
+    } catch (error) {
+      zonaAviso.replaceChildren(aviso(error.message));
+      enviar.disabled = false;
+      enviar.textContent = 'Confirmar reserva';
+      if (/ocup|cerradura|horario/i.test(error.message)) {
+        estado.inicio = null;
+        setTimeout(() => irA(3), 1600);
+      }
+    }
+  });
+
+  contenido.appendChild(panel);
+}
+
+function pintarExito(r) {
+  limpiar();
+  $('pasos').querySelectorAll('i').forEach((m) => m.classList.add('hecho'));
+  $('sub').textContent = 'Reserva registrada';
+
+  const turno = r.turno;
+  const pendiente = r.requiere_confirmacion;
+
+  contenido.appendChild(h('div', { clase: 'panel' },
+    h('div', { clase: 'grande' },
+      h('div', { clase: 'icono', texto: pendiente ? '⏳' : '✓' }),
+      h('h2', { texto: pendiente ? '¡Anotamos tu turno!' : '¡Turno confirmado!' })),
+    h('p', { clase: 'sub', style: 'text-align:center;margin-top:8px', texto: pendiente
+      ? 'Te vamos a escribir para confirmarlo. Si necesitás cambiar algo, respondé ese mensaje.'
+      : 'Te esperamos. Si necesitás cambiar algo, respondé el mensaje que te enviamos.' }),
+    h('div', { clase: 'resumen' },
+      h('div', { clase: 'linea' }, h('span', { texto: 'Servicio' }), h('span', { texto: turno.servicio })),
+      h('div', { clase: 'linea' }, h('span', { texto: 'Profesional' }), h('span', { texto: turno.profesional })),
+      h('div', { clase: 'linea' }, h('span', { texto: 'Día y hora' }), h('span', { texto: `${turno.inicio.slice(0, 10).split('-').reverse().join('/')} a las ${turno.inicio.slice(11, 16)}` })),
+      h('div', { clase: 'linea' }, h('span', { texto: 'Valor' }), h('span', { texto: dinero(turno.precio_centavos) })))));
+
+  if (estado.negocio?.direccion) {
+    contenido.appendChild(h('p', { clase: 'pie', texto: `Te esperamos en ${estado.negocio.direccion}` }));
+  }
+}
+
+// -------------------------------------------------------------------- inicio
+async function iniciar() {
+  try {
+    const datos = await pedir('/catalogo');
+    estado.negocio = datos.negocio;
+    estado.servicios = datos.servicios;
+    estado.profesionales = datos.profesionales;
+
+    $('marca').textContent = estado.negocio.nombre;
+    document.title = `Reservar turno · ${estado.negocio.nombre}`;
+    $('pie').textContent = [
+      estado.negocio.direccion,
+      estado.negocio.telefono ? `Tel. ${estado.negocio.telefono}` : '',
+    ].filter(Boolean).join(' · ');
+
+    if (!estado.negocio.activa) {
+      limpiar();
+      contenido.appendChild(h('div', { clase: 'panel' },
+        h('p', { clase: 'vacio', texto: 'La reserva online está cerrada por ahora. Escribinos y te damos un turno.' })));
+      return;
+    }
+
+    irA(1);
+  } catch (error) {
+    limpiar();
+    contenido.appendChild(h('div', { clase: 'panel' }, aviso(error.message)));
+  }
+}
+
+iniciar();
+</script>
+</body>
+</html>

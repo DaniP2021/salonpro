@@ -32,6 +32,21 @@ export async function montar(contenedor, ctx) {
   }
 
   // ------------------------------------------------------------ negocio
+  // Los ajustes viajan como texto ('0'/'1'); las casillas necesitan booleanos
+  // reales, si no '0' se interpreta como verdadero.
+  const comoBooleano = (clave) => ajustes[clave] === '1' || ajustes[clave] === 1 || ajustes[clave] === true;
+  const valoresAjustes = {
+    ...ajustes,
+    recordatorio_24h: comoBooleano('recordatorio_24h'),
+    recordatorio_2h: comoBooleano('recordatorio_2h'),
+    propina_para_profesional: comoBooleano('propina_para_profesional'),
+    reserva_requiere_confirmacion: comoBooleano('reserva_requiere_confirmacion'),
+    correo_activo: comoBooleano('correo_activo'),
+    correo_aviso_profesional: comoBooleano('correo_aviso_profesional'),
+    correo_recordatorio: comoBooleano('correo_recordatorio'),
+    web_publica_activa: comoBooleano('web_publica_activa'),
+  };
+
   const formulario = campos([
     { clave: 'nombre_negocio', label: 'Nombre del salón', tipo: 'texto', requerido: true },
     {
@@ -63,7 +78,16 @@ export async function montar(contenedor, ctx) {
     {
       clave: 'correo_recordatorio', label: 'Recordatorio por correo (24 h)', tipo: 'check',
     },
-  ], ajustes);
+    { clave: 'separador_reserva', tipo: 'separador', label: 'Reserva online' },
+    {
+      clave: 'web_publica_activa', label: 'Permitir que los clientes reserven online', tipo: 'check',
+      pista: 'Publica la página de reserva en /reservar. Mientras esté apagada, la página responde "reservas cerradas".',
+    },
+    {
+      clave: 'reserva_requiere_confirmacion', label: 'Las reservas quedan pendientes de aprobación', tipo: 'check',
+      pista: 'Si lo desactivás, el turno se confirma solo y ocupa la agenda al instante.',
+    },
+  ], valoresAjustes);
 
   const tarjetaNegocio = el('div', { clase: 'tarjeta' },
     el('div', { clase: 'tarjeta-cab' }, el('h2', { texto: 'Datos del negocio' })),
@@ -84,6 +108,8 @@ export async function montar(contenedor, ctx) {
                 correo_activo: valores.correo_activo ? '1' : '0',
                 correo_aviso_profesional: valores.correo_aviso_profesional ? '1' : '0',
                 correo_recordatorio: valores.correo_recordatorio ? '1' : '0',
+                web_publica_activa: valores.web_publica_activa ? '1' : '0',
+                reserva_requiere_confirmacion: valores.reserva_requiere_confirmacion ? '1' : '0',
               });
               estado.negocio = { ...estado.negocio, ...respuesta.ajustes };
               aviso('Configuración guardada');

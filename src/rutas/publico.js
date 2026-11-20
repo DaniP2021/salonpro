@@ -2,9 +2,13 @@
 // un enlace firmado y con vencimiento, sin datos de otros clientes.
 
 import * as db from '../db.js';
-import { GET, POST, html } from '../router.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { GET, POST, creado, html } from '../router.js';
+import { DIR_PUBLICO } from '../config.js';
 import { escaparHtml as esc, fechaLarga, fmtMoneda } from '../util.js';
 import * as whatsapp from '../dominio/whatsapp.js';
+import * as publico from '../dominio/publico.js';
 
 const ESTILOS = `
   :root { color-scheme: dark; }
@@ -119,6 +123,33 @@ function paginaResultado(titulo, icono, texto, turno, negocio) {
 }
 
 export function registrar() {
+  // ------------------------------------------------------- reserva pública
+  // Página y endpoints sin sesión. Solo exponen catálogo y horarios libres.
+  GET('/reservar', () => html(
+    fs.readFileSync(path.join(DIR_PUBLICO, 'reservar.html'), 'utf8'),
+  ), { publico: true });
+
+  GET('/api/publico/negocio', () => publico.negocioPublico(), { publico: true });
+
+  GET('/api/publico/catalogo', () => ({
+    negocio: publico.negocioPublico(),
+    servicios: publico.serviciosPublicos(),
+    profesionales: publico.profesionalesPublicos(),
+  }), { publico: true });
+
+  GET('/api/publico/disponibilidad', (ctx) => publico.disponibilidadPublica({
+    servicio_id: ctx.q('servicio_id'),
+    profesional_id: ctx.q('profesional_id'),
+    fecha: ctx.q('fecha'),
+  }), { publico: true });
+
+  POST('/api/publico/turnos', (ctx) => creado(publico.crearReserva(ctx.cuerpo, {
+    ip: ctx.req?.socket?.remoteAddress || 'sin-ip',
+  })), { publico: true });
+
+  GET('/api/publico/turno/{id:num}', (ctx) => publico.estadoReserva(Number(ctx.param('id'))), { publico: true });
+
+  // ------------------------------------------------- confirmación por token
   GET('/c/{token}', (ctx) => {
     const negocio = db.leerAjustes();
     const token = ctx.param('token');

@@ -70,7 +70,9 @@ export const CONFIG_POR_DEFECTO = {
   direccion: '',
   telefono: '',
   instagram: '',
-  web_publica_activa: '1',
+  // Apagada por defecto: la página pública no se expone hasta que el salón
+  // la active a propósito desde Ajustes.
+  web_publica_activa: '0',
   slot_min: '15',
   recordatorio_24h: '1',
   recordatorio_2h: '1',
