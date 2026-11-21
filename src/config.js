@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import os from 'node:os';
 
 export const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const DIR_DATOS = process.env.SALON_DATA_DIR
@@ -15,7 +16,31 @@ export const DIR_PUBLICO = path.join(RAIZ, 'public');
 
 export const PUERTO = Number(process.env.SALON_PORT || 8000);
 export const HOST = process.env.SALON_HOST || '127.0.0.1';
-export const URL_BASE = (process.env.SALON_BASE_URL || `http://${HOST === '0.0.0.0' ? '127.0.0.1' : HOST}:${PUERTO}`).replace(/\/+$/, '');
+
+/**
+ * Dirección que se usa en los enlaces que salen hacia afuera (WhatsApp, email).
+ * Si no se define SALON_BASE_URL y la app escucha en toda la red, se toma la IP
+ * de Tailscale (100.x, fija) porque una dirección 127.0.0.1 no le sirve a nadie
+ * que reciba el link en su celular.
+ */
+function direccionPublica() {
+  if (HOST !== '0.0.0.0' && HOST !== '::') return `http://${HOST}:${PUERTO}`;
+
+  const candidatas = [];
+  for (const nombre of Object.keys(os.networkInterfaces())) {
+    for (const datos of os.networkInterfaces()[nombre] || []) {
+      if (String(datos.family) !== 'IPv4' || datos.internal) continue;
+      const ip = String(datos.address);
+      if (ip.startsWith('169.254.')) continue;
+      candidatas.push(ip);
+    }
+  }
+  const tailscale = candidatas.find((ip) => ip.startsWith('100.'));
+  const elegida = tailscale || candidatas[0] || '127.0.0.1';
+  return `http://${elegida}:${PUERTO}`;
+}
+
+export const URL_BASE = (process.env.SALON_BASE_URL || direccionPublica()).replace(/\/+$/, '');
 
 export const RUTA_DB = process.env.SALON_DB
   ? path.resolve(process.env.SALON_DB)

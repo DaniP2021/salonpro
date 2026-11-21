@@ -311,7 +311,20 @@ export async function procesarCola(limite = 25) {
 export async function enviarMensaje(id) {
   const mensaje = db.uno('SELECT * FROM wa_mensajes WHERE id = ?', [id]);
   if (!mensaje || mensaje.estado !== 'en_cola') return null;
-  const cuenta = mensaje.cuenta_id ? db.uno('SELECT * FROM wa_cuentas WHERE id = ?', [mensaje.cuenta_id]) : null;
+
+  // Si al encolar no se indicó cuenta (por ejemplo, los avisos de mensajería
+  // interna), se usa la del profesional del turno o la cuenta general activa.
+  // Antes caía siempre a 'consola' y el mensaje nunca salía a la red.
+  let cuenta = mensaje.cuenta_id
+    ? db.uno('SELECT * FROM wa_cuentas WHERE id = ?', [mensaje.cuenta_id])
+    : null;
+  if (!cuenta) {
+    const turno = mensaje.turno_id
+      ? db.uno('SELECT profesional_id FROM turnos WHERE id = ?', [mensaje.turno_id])
+      : null;
+    cuenta = cuentaPara(turno?.profesional_id || null);
+  }
+  const cuentaId = cuenta?.id || null;
   const proveedor = cuenta?.proveedor || 'consola';
 
   let resultado;
