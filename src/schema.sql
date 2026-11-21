@@ -164,6 +164,10 @@ CREATE TABLE IF NOT EXISTS clientes (
   origen                  TEXT NOT NULL DEFAULT '',
   profesional_preferido_id INTEGER REFERENCES profesionales(id) ON DELETE SET NULL,
   acepta_whatsapp         INTEGER NOT NULL DEFAULT 1,
+  -- Llave del portal del cliente: /mi/{token}. Vacío = sin portal emitido.
+  token_acceso            TEXT NOT NULL DEFAULT '',
+  -- Se completa cuando el cliente termina su registro en el portal.
+  registrado_en           TEXT NOT NULL DEFAULT '',
   creado_en               TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_clientes_telefono ON clientes(telefono);

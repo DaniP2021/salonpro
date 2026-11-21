@@ -159,6 +159,18 @@ async function columnaHilo(mem, ctx, lista) {
       el('div', { clase: 'conv-sub',
         texto: [telefonoLegible(conversacion.telefono), conversacion.email].filter(Boolean).join(' · ') || 'Sin datos de contacto' })),
     el('div', { clase: 'conv-acciones' },
+      boton('Copiar link', {
+        clase: 'tenue chico',
+        on: async () => {
+          try {
+            const datos = await api.get(`/api/clientes/${conversacion.cliente_id}/portal`);
+            await navigator.clipboard.writeText(datos.enlace);
+            aviso('Link copiado: mandáselo al cliente por WhatsApp');
+          } catch (error) {
+            aviso(mensajeError(error), 'error');
+          }
+        },
+      }),
       boton('Ver ficha', {
         clase: 'tenue chico',
         on: () => ctx.navegar(`#/clientes/${conversacion.cliente_id}`),

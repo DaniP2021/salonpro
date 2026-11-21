@@ -111,8 +111,7 @@ export function transaccion(fn) {
   }
 }
 
-/** Inserta en una tabla a partir de un objeto {columna: valor}. */
-export function insertar(tabla, datos) {
+/** Inserta en una tabla a partir de un objeto {columna: valor}. */export function insertar(tabla, datos) {
   const claves = Object.keys(datos);
   const sql = `INSERT INTO ${tabla} (${claves.join(', ')}) VALUES (${claves.map(() => '?').join(', ')})`;
   return ejecutar(sql, claves.map((k) => datos[k])).id;
@@ -156,6 +155,31 @@ export function guardarAjustes(objeto) {
 // ---------------------------------------------------------------- arranque
 
 /**
+ * Columnas agregadas después de la primera versión del esquema.
+ * Se aplican con ALTER TABLE solo si faltan, así las bases ya creadas se
+ * actualizan sin perder datos.
+ */
+const COLUMNAS_NUEVAS = [
+  ['clientes', 'token_acceso', "TEXT NOT NULL DEFAULT ''"],
+  ['clientes', 'registrado_en', "TEXT NOT NULL DEFAULT ''"],
+];
+
+function migrarColumnas() {
+  for (const [tabla, columna, definicion] of COLUMNAS_NUEVAS) {
+    const existentes = consultar(`PRAGMA table_info("${tabla}")`).map((c) => c.name);
+    if (!existentes.includes(columna)) {
+      ejecutar(`ALTER TABLE "${tabla}" ADD COLUMN ${columna} ${definicion}`);
+    }
+  }
+
+  // Índices sobre columnas migradas: van acá y no en schema.sql, porque el
+  // esquema se ejecuta antes de que la columna exista en una base vieja.
+  ejecutar(
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_clientes_token ON clientes(token_acceso) WHERE token_acceso <> ''",
+  );
+}
+
+/**
  * Crea el esquema y siembra lo mínimo para que la app arranque usable.
  * Devuelve { adminCreado: {email, clave} | null, baseNueva: boolean }.
  */
@@ -163,6 +187,10 @@ export function inicializar(ruta = RUTA_DB) {
   abrir(ruta);
   const esquema = fs.readFileSync(path.join(DIR_SRC, 'schema.sql'), 'utf8');
   transaccion(() => bd().exec(esquema));
+
+  // Columnas agregadas después de la primera versión: se suman a las bases que
+  // ya existen (CREATE TABLE IF NOT EXISTS no las toca).
+  migrarColumnas();
 
   const resultado = { adminCreado: null, baseNueva: false };
 

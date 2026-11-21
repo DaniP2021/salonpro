@@ -11,6 +11,7 @@ import * as db from '../db.js';
 import { ErrorApp, ahoraTexto, texto, textoObligatorio, validar } from '../util.js';
 import * as whatsapp from './whatsapp.js';
 import * as correo from './correo.js';
+import { enlacePortal } from './token-portal.js';
 
 const MAX_CUERPO = 4000;
 
@@ -202,8 +203,7 @@ export function enviar(conversacionId, usuario, datos) {
   return { mensaje: { ...creado, interno: !!creado.interno }, aviso };
 }
 
-export function marcarLeida(conversacionId, usuario) {
-  const marca = lector(usuario);
+export function marcarLeida(conversacionId, usuario) {  const marca = lector(usuario);
   const maximo = db.numero(
     'SELECT COALESCE(MAX(id), 0) FROM mensajes WHERE conversacion_id = ?', [conversacionId],
   );
@@ -232,6 +232,72 @@ export function marcarLeida(conversacionId, usuario) {
   return { ok: true, ultimo_leido_id: maximo };
 }
 
+/**
+ * Mensaje escrito por el cliente desde su portal.
+ * No hay sesión: la identidad ya la resolvió el token del portal.
+ */
+export function enviarDelCliente(conversacionId, cliente, cuerpoCrudo) {
+  const conversacion = db.uno('SELECT * FROM conversaciones WHERE id = ?', [conversacionId]);
+  if (!conversacion) throw new ErrorApp('La conversación no existe.', 404);
+  if (Number(conversacion.cliente_id) !== Number(cliente.id)) {
+    throw new ErrorApp('Esa conversación no es tuya.', 403);
+  }
+
+  const cuerpo = textoObligatorio(cuerpoCrudo, 'mensaje', MAX_CUERPO);
+
+  const id = db.insertar('mensajes', {
+    conversacion_id: conversacionId,
+    autor_tipo: 'cliente',
+    autor_id: cliente.id,
+    autor_nombre: cliente.nombre || 'Cliente',
+    cuerpo,
+    canal: 'app',
+    interno: 0,
+    creado_en: ahoraTexto(),
+  });
+
+  db.actualizar('conversaciones', conversacionId, {
+    ultimo_mensaje_en: ahoraTexto(),
+    ultimo_mensaje: cuerpo.slice(0, 200),
+    total_mensajes: Number(conversacion.total_mensajes || 0) + 1,
+    estado: 'abierta',
+  });
+
+  // El cliente leyó todo hasta acá, incluido lo suyo.
+  const maximo = db.numero('SELECT COALESCE(MAX(id), 0) FROM mensajes WHERE conversacion_id = ?', [conversacionId]);
+  const existente = db.uno(
+    'SELECT ultimo_leido_id FROM conversacion_lecturas WHERE conversacion_id = ? AND lector_tipo = ? AND lector_id = ?',
+    [conversacionId, 'cliente', cliente.id],
+  );
+  if (existente) {
+    db.ejecutar(
+      `UPDATE conversacion_lecturas SET ultimo_leido_id = ?, actualizado_en = ?
+       WHERE conversacion_id = ? AND lector_tipo = ? AND lector_id = ?`,
+      [maximo, ahoraTexto(), conversacionId, 'cliente', cliente.id],
+    );
+  } else {
+    db.insertar('conversacion_lecturas', {
+      conversacion_id: conversacionId,
+      lector_tipo: 'cliente',
+      lector_id: cliente.id,
+      ultimo_leido_id: maximo,
+      actualizado_en: ahoraTexto(),
+    });
+  }
+
+  const creado = db.uno('SELECT * FROM mensajes WHERE id = ?', [id]);
+  return { ...creado, interno: false };
+}
+
+/** Mensajes que puede ver el cliente: solo los no internos. */
+export function mensajesParaCliente(conversacionId) {
+  return db.consultar(
+    `SELECT id, autor_tipo, autor_nombre, cuerpo, canal, creado_en
+     FROM mensajes WHERE conversacion_id = ? AND interno = 0 ORDER BY id LIMIT 500`,
+    [conversacionId],
+  );
+}
+
 // ------------------------------------------------------------------- avisos
 
 /**
@@ -243,7 +309,22 @@ function avisarAlCliente(clienteId, cuerpo, autorNombre) {
   if (!cliente) return { omitido: 'El cliente no existe.' };
 
   const resumen = cuerpo.length > 120 ? `${cuerpo.slice(0, 117)}…` : cuerpo;
-  const textoAviso = `${autorNombre} te escribió en SalonPro:\n\n"${resumen}"\n\nRespondé desde la app.`;
+
+  // El link del portal es la llave del cliente: entra sin contraseña y responde
+  // ahí. Si no se pudo generar, el aviso igual sale, sin enlace.
+  let enlace = '';
+  try { enlace = enlacePortal(cliente.id); } catch { enlace = ''; }
+
+  const negocio = db.leerAjuste('nombre_negocio', 'el salón');
+  const textoAviso = [
+    `${autorNombre} te escribió desde ${negocio}:`,
+    '',
+    `"${resumen}"`,
+    '',
+    enlace
+      ? `Respondé desde tu cuenta (un toque, sin contraseña):\n${enlace}`
+      : 'Respondé este mensaje y te contestamos.',
+  ].join('\n');
 
   if (cliente.telefono && cliente.acepta_whatsapp) {
     try {

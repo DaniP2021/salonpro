@@ -242,9 +242,20 @@ test('programa los recordatorios futuros y descarta los que ya pasaron', async (
   assert.equal(dosHoras.estado, 'en_cola');
   assert.equal(dosHoras.programado_para, `${DIA} 08:00`);
 
-  // El de 24 h caería hoy a las 10:00, o sea en el pasado: no se programa.
+  // El de 24 h cae el día anterior a las 10:00. Si ese momento ya pasó no se
+  // programa; si todavía no llegó (cuando el turno cae después de un domingo,
+  // porque el local cierra) sí. La prueba se adapta en vez de asumir que el
+  // turno siempre es mañana.
+  const cae24h = new Date(`${DIA}T10:00:00`);
+  cae24h.setDate(cae24h.getDate() - 1);
   const veinticuatro = recordatorios.find((m) => m.plantilla === 'recordatorio_24h');
-  assert.equal(veinticuatro, undefined, 'no se programa un recordatorio cuya hora ya pasó');
+
+  if (cae24h <= new Date()) {
+    assert.equal(veinticuatro, undefined, 'no se programa un recordatorio cuya hora ya pasó');
+  } else {
+    assert.ok(veinticuatro, 'si la hora del recordatorio todavía no llegó, se programa');
+    assert.equal(veinticuatro.estado, 'en_cola');
+  }
 });
 
 test('rechaza un turno superpuesto del mismo profesional', async () => {

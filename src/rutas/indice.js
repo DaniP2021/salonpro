@@ -13,9 +13,10 @@ import * as whatsapp from './whatsapp.js';
 import * as correo from './correo.js';
 import * as egresos from './egresos.js';
 import * as mensajeria from './mensajeria.js';
+import * as portal from './portal.js';
 import * as publico from './publico.js';
 
-const MODULOS = [auth, negocio, usuarios, equipo, catalogo, clientes, agenda, caja, reportes, whatsapp, correo, egresos, mensajeria, publico];
+const MODULOS = [auth, negocio, usuarios, equipo, catalogo, clientes, agenda, caja, reportes, whatsapp, correo, egresos, mensajeria, publico, portal];
 
 let registrado = false;
 
