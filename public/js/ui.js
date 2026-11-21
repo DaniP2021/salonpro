@@ -57,7 +57,18 @@ export function boton(texto, opciones = {}) {
   });
   if (opciones.icono) nodo.appendChild(icono(opciones.icono, 'chico'));
   if (texto) nodo.appendChild(el('span', { texto }));
-  if (opciones.on) nodo.addEventListener('click', opciones.on);
+  // `on` acepta una función (atajo para click) o un objeto { evento: manejador },
+  // igual que el(). Si se le pasa un objeto a addEventListener sin handleEvent,
+  // el navegador no hace nada y el botón queda mudo sin dar ningún error.
+  if (opciones.on) {
+    if (typeof opciones.on === 'function') {
+      nodo.addEventListener('click', opciones.on);
+    } else {
+      for (const [evento, manejador] of Object.entries(opciones.on)) {
+        if (typeof manejador === 'function') nodo.addEventListener(evento, manejador);
+      }
+    }
+  }
   if (opciones.deshabilitado) nodo.disabled = true;
   return nodo;
 }

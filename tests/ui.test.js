@@ -483,6 +483,33 @@ async function main() {
     return `velo + ventana de ${nodosCaja} nodos, cierre correcto`;
   });
 
+  /**
+   * boton() tiene que aceptar `on` como función y como objeto { click }.
+   * Con el objeto pasado tal cual a addEventListener el botón queda mudo y no
+   * da ningún error: así se rompió el menú del celular y siete botones más.
+   */
+  await probar('boton() conecta el click en las dos formas de on', async () => {
+    const { boton } = await import(pathToFileURL(path.resolve('public/js/ui.js')).href);
+
+    let llamadas = 0;
+
+    const conFuncion = boton('Guardar', { on: () => { llamadas += 1; } });
+    conFuncion.click();
+    if (llamadas !== 1) throw new Error('on como función no se conectó');
+
+    const conObjeto = boton('', { icono: 'ajustes', on: { click: () => { llamadas += 1; } } });
+    conObjeto.click();
+    if (llamadas !== 2) throw new Error('on como objeto { click } no se conectó');
+
+    // El evento que recibe el manejador tiene que ser el del click.
+    let recibido = null;
+    const conEvento = boton('', { on: { click: (evento) => { recibido = evento; } } });
+    conEvento.click();
+    if (!recibido) throw new Error('el manejador no recibió el evento');
+
+    return 'función y objeto { click }, con el evento';
+  });
+
   /** Un modal de confirmación también tiene que quedar con su caja dentro. */
   await probar('El diálogo de confirmación se inserta entero', async () => {
     documento.body = new Nodo('body');
