@@ -248,8 +248,16 @@ export function normalizarTelefono(valor) {
   let d = soloDigitos(valor);
   if (!d) return '';
   if (d.startsWith('00')) d = d.slice(2);
-  // Argentina: 11 2233-4455 -> 5491122334455
+  // Argentina sin código de país: 10 dígitos con característica local.
+  // Cubre AMBA (11) y las características del interior (221, 261, 341, 351…).
+  if (d.length === 10 && (d.startsWith('11') || /^[23]\d\d/.test(d))) return `549${d}`;
   if (d.length === 10 && d.startsWith('1')) return `549${d}`;
+  // Argentina con el país adelante pero sin el 9 del móvil:
+  // 54 11 6670-8933 -> 549 11 6670 8933. Es el error más común al cargar
+  // números, y WhatsApp rechaza el envío si falta ese 9.
+  if (d.length === 12 && d.startsWith('54') && !d.startsWith('549') && !d.startsWith('540')) {
+    return `549${d.slice(2)}`;
+  }
   if (d.length === 11 && d.startsWith('54')) return d;
   if (d.length === 12 && d.startsWith('549')) return d;
   if (d.length === 13 && d.startsWith('540')) return `549${d.slice(3)}`;
