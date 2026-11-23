@@ -248,6 +248,9 @@ export function normalizarTelefono(valor) {
   let d = soloDigitos(valor);
   if (!d) return '';
   if (d.startsWith('00')) d = d.slice(2);
+  // Formato local con el 0 de discado: 0221 306-2350, 011 6670-8933.
+  // WhatsApp no reconoce ese 0: el número tiene que ir completo.
+  if (d.startsWith('0')) d = d.slice(1);
   // Argentina sin código de país: 10 dígitos con característica local.
   // Cubre AMBA (11) y las características del interior (221, 261, 341, 351…).
   if (d.length === 10 && (d.startsWith('11') || /^[23]\d\d/.test(d))) return `549${d}`;
