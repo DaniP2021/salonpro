@@ -106,6 +106,12 @@ export const CONFIG_POR_DEFECTO = {
   reserva_publica_max_dias: '45',
   reserva_requiere_confirmacion: '1',
   mensaje_bienvenida: '',
+  // Texto que se envía al cliente cuando sus mensajes habían fallado y el canal
+  // vuelve a funcionar. {nombre} y {negocio} se reemplazan solos.
+  mensaje_recuperacion:
+    'Hola {nombre}! Tuvimos un problema técnico y nuestros mensajes anteriores no te estaban llegando. '
+    + 'Ya está solucionado. Perdón por la demora y quedo a tu disposición.',
+  recuperacion_activa: '1',
   // Dirección pública para los enlaces que se envían (WhatsApp, email).
   // Vacío = se detecta automáticamente. Para que el cliente pueda tocar el
   // enlace hace falta un dominio con HTTPS.

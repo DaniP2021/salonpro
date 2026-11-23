@@ -166,6 +166,11 @@ const COLUMNAS_NUEVAS = [
   ['wa_plantillas', 'meta_idioma', "TEXT NOT NULL DEFAULT 'es'"],
   ['wa_plantillas', 'meta_variables', "TEXT NOT NULL DEFAULT ''"],
   ['wa_mensajes', 'datos', "TEXT NOT NULL DEFAULT '{}'"],
+  // Aviso de recuperación: se manda cuando un envío vuelve a funcionar después
+  // de haber fallado, para que el cliente no se enfríe por la falla técnica.
+  ['wa_mensajes', 'es_recuperacion', 'INTEGER NOT NULL DEFAULT 0'],
+  ['wa_mensajes', 'recuperado_en', "TEXT NOT NULL DEFAULT ''"],
+  ['mensajes', 'wa_mensaje_id', 'INTEGER'],
 ];
 
 function migrarColumnas() {

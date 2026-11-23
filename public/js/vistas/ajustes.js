@@ -45,6 +45,7 @@ export async function montar(contenedor, ctx) {
     correo_aviso_profesional: comoBooleano('correo_aviso_profesional'),
     correo_recordatorio: comoBooleano('correo_recordatorio'),
     web_publica_activa: comoBooleano('web_publica_activa'),
+  recuperacion_activa: comoBooleano('recuperacion_activa'),
   };
 
   const formulario = campos([
@@ -95,6 +96,16 @@ export async function montar(contenedor, ctx) {
         + 'Tiene que ser un dominio con HTTPS: WhatsApp no convierte en enlace una dirección con IP, '
         + 'así que el cliente no podría tocarlo. Dejalo vacío para usar la dirección automática.',
     },
+  { tipo: 'separador', texto: 'Avisos automaticos' },
+  {
+    clave: 'recuperacion_activa', label: 'Avisar cuando hubo una falla', tipo: 'check',
+    pista: 'Si un mensaje no se pudo entregar y después el envío vuelve a funcionar, se le '
+      + 'manda al cliente un aviso de que ya está solucionado. Se envía una sola vez por tanda.',
+  },
+  {
+    clave: 'mensaje_recuperacion', label: 'Texto del aviso', tipo: 'textarea',
+    pista: 'Se pueden usar {nombre} y {negocio}: se reemplazan solos al enviar.',
+  },
   ], valoresAjustes);
 
   const tarjetaNegocio = el('div', { clase: 'tarjeta' },
@@ -117,6 +128,7 @@ export async function montar(contenedor, ctx) {
                 correo_aviso_profesional: valores.correo_aviso_profesional ? '1' : '0',
                 correo_recordatorio: valores.correo_recordatorio ? '1' : '0',
                 web_publica_activa: valores.web_publica_activa ? '1' : '0',
+              recuperacion_activa: valores.recuperacion_activa ? '1' : '0',
                 reserva_requiere_confirmacion: valores.reserva_requiere_confirmacion ? '1' : '0',
               });
               estado.negocio = { ...estado.negocio, ...respuesta.ajustes };

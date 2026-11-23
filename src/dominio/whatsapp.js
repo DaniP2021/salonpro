@@ -151,7 +151,7 @@ function cuerpoDePlantilla(clave) {
  */
 export function encolar({
   cuentaId = null, turnoId = null, clienteId = null, para, plantilla,
-  cuerpo, programadoPara = '', enlace = '', datos = {},
+  cuerpo, programadoPara = '', enlace = '', datos = {}, esRecuperacion = false,
 }) {
   const destino = normalizarTelefono(para);
   if (!destino) throw new ErrorApp('El cliente no tiene un teléfono válido para WhatsApp.', 400);
@@ -178,6 +178,8 @@ export function encolar({
     leido_en: '',
     respondido_en: '',
     respuesta: '',
+    es_recuperacion: esRecuperacion ? 1 : 0,
+    recuperado_en: '',
   });
   return db.uno('SELECT * FROM wa_mensajes WHERE id = ?', [id]);
 }
@@ -352,6 +354,15 @@ export async function enviarMensaje(id) {
       intentos,
       ultimo_error: '',
     });
+
+    // El envío funcionó: si antes hubo fallas con este mismo cliente, se le
+    // avisa que ya está resuelto para que la falla no le haga perder interés.
+    try {
+      const enviado = db.uno('SELECT * FROM wa_mensajes WHERE id = ?', [id]);
+      avisarRecuperacion(enviado);
+    } catch (error) {
+      console.error('[whatsapp] no se pudo avisar la recuperación:', error.message);
+    }
   } else {
     db.actualizar('wa_mensajes', id, {
       estado: intentos >= MAX_INTENTOS ? 'fallido' : 'en_cola',
@@ -363,8 +374,60 @@ export async function enviarMensaje(id) {
   return { id, ...resultado, intentos };
 }
 
-async function enviarConProveedor(proveedor, cuenta, mensaje) {
-  if (proveedor === 'meta') return enviarPorMeta(cuenta, mensaje);
+/**
+ * Aviso de recuperación.
+ *
+ * Cuando un envío falla y después otro llega bien al mismo cliente, se le manda
+ * un mensaje corto avisando que hubo un problema técnico y que ya está
+ * solucionado. Se manda una sola vez por tanda de fallas: los mensajes fallidos
+ * quedan marcados con `recuperado_en`.
+ *
+ * No se dispara para el propio aviso (evita cadenas) ni si está desactivado en
+ * Ajustes.
+ */
+export function avisarRecuperacion(mensajeEnviado) {
+  if (!mensajeEnviado || mensajeEnviado.es_recuperacion) return null;
+  if (db.leerAjuste('recuperacion_activa', '1') !== '1') return null;
+
+  const fallidos = db.consultar(
+    `SELECT * FROM wa_mensajes
+     WHERE estado = 'fallido' AND es_recuperacion = 0 AND recuperado_en = ''
+       AND id < ? AND (cliente_id = ? OR para = ?)
+     ORDER BY id`,
+    [mensajeEnviado.id, mensajeEnviado.cliente_id ?? -1, mensajeEnviado.para],
+  );
+  if (!fallidos.length) return null;
+
+  // Se marcan antes de encolar: si el aviso también falla, no se repite.
+  for (const fallido of fallidos) {
+    db.actualizar('wa_mensajes', fallido.id, { recuperado_en: ahoraTexto() });
+  }
+
+  const cliente = mensajeEnviado.cliente_id
+    ? db.uno('SELECT nombre FROM clientes WHERE id = ?', [mensajeEnviado.cliente_id])
+    : null;
+  const negocio = db.leerAjuste('nombre_negocio', 'el salón');
+  const plantilla = db.leerAjuste('mensaje_recuperacion', '');
+  const primerNombre = String(cliente?.nombre || '').trim().split(/\s+/)[0] || '';
+
+  const cuerpo = String(plantilla || '')
+    .replaceAll('{nombre}', primerNombre)
+    .replaceAll('{negocio}', negocio)
+    .replace(/\s+!/g, '!')
+    .trim();
+  if (!cuerpo) return null;
+
+  return encolar({
+    cuentaId: mensajeEnviado.cuenta_id || null,
+    clienteId: mensajeEnviado.cliente_id || null,
+    para: mensajeEnviado.para,
+    plantilla: 'recuperacion',
+    cuerpo,
+    esRecuperacion: true,
+  });
+}
+
+async function enviarConProveedor(proveedor, cuenta, mensaje) {  if (proveedor === 'meta') return enviarPorMeta(cuenta, mensaje);
   if (proveedor === 'enlace') return enviarPorEnlace(cuenta, mensaje);
   return enviarPorConsola(cuenta, mensaje);
 }

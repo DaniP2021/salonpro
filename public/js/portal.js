@@ -17,7 +17,10 @@ function h(etiqueta, props = {}, ...hijos) {
   for (const [clave, valor] of Object.entries(props)) {
     if (clave === 'clase') nodo.className = valor;
     else if (clave === 'texto') nodo.textContent = valor;
-    else if (clave.startsWith('on')) nodo.addEventListener(clave.slice(2), valor);
+    // Los nombres de evento distinguen mayúsculas: onClick tiene que quedar
+    // como 'click', si no el manejador se registra en un evento inexistente
+    // y el botón queda muerto sin ningún error visible.
+    else if (clave.startsWith('on')) nodo.addEventListener(clave.slice(2).toLowerCase(), valor);
     else nodo.setAttribute(clave, valor);
   }
   for (const hijo of hijos.flat()) {

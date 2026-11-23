@@ -151,7 +151,12 @@ export function listarMensajes(conversacionId, usuario, { desde = 0 } = {}) {
   if (desde) { donde.push('m.id > ?'); params.push(Number(desde)); }
 
   return db.consultar(
-    `SELECT m.* FROM mensajes m WHERE ${donde.join(' AND ')} ORDER BY m.id LIMIT 500`,
+    // Se trae el estado del envío de WhatsApp para poder mostrar si el mensaje
+    // salió, se entregó, se leyó o falló.
+    `SELECT m.*, w.estado AS wa_estado, w.ultimo_error AS wa_error
+     FROM mensajes m
+     LEFT JOIN wa_mensajes w ON w.id = m.wa_mensaje_id
+     WHERE ${donde.join(' AND ')} ORDER BY m.id LIMIT 500`,
     params,
   ).map((m) => ({ ...m, interno: !!m.interno }));
 }
@@ -198,9 +203,15 @@ export function enviar(conversacionId, usuario, datos) {
   let aviso = null;
   if (!interno && datos.avisar !== false) {
     aviso = avisarAlCliente(conversacion.cliente_id, cuerpo, autor.nombre);
+    // Se guarda el envío de WhatsApp asociado para poder mostrar si el mensaje
+    // se entregó y si el cliente lo leyó.
+    if (aviso?.canal === 'whatsapp' && aviso.id) {
+      db.actualizar('mensajes', id, { wa_mensaje_id: aviso.id });
+    }
   }
 
-  return { mensaje: { ...creado, interno: !!creado.interno }, aviso };
+  const actualizado = db.uno('SELECT * FROM mensajes WHERE id = ?', [id]);
+  return { mensaje: { ...actualizado, interno: !!actualizado.interno }, aviso };
 }
 
 export function marcarLeida(conversacionId, usuario) {  const marca = lector(usuario);

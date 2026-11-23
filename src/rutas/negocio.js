@@ -12,6 +12,7 @@ const CLAVES_EDITABLES = [
   'instagram', 'slot_min', 'recordatorio_24h', 'recordatorio_2h', 'propina_para_profesional',
   'reserva_publica_min_horas', 'reserva_publica_max_dias', 'reserva_requiere_confirmacion',
   'mensaje_bienvenida', 'web_publica_activa', 'url_publica',
+  'recuperacion_activa', 'mensaje_recuperacion',
   'correo_activo', 'correo_confirmacion_cliente', 'correo_aviso_profesional', 'correo_recordatorio',
 ];
 
@@ -24,7 +25,9 @@ export function registrar() {
   PUT('/api/negocio', (ctx) => {
     const cambios = {};
     for (const clave of CLAVES_EDITABLES) {
-      if (ctx.cuerpo[clave] !== undefined) cambios[clave] = texto(ctx.cuerpo[clave], 300);
+      if (ctx.cuerpo[clave] === undefined) continue;
+      // El texto del aviso de recuperación es más largo que el resto.
+      cambios[clave] = texto(ctx.cuerpo[clave], clave === 'mensaje_recuperacion' ? 600 : 300);
     }
     if (cambios.slot_min !== undefined) {
       const slot = entero(cambios.slot_min, 15);
