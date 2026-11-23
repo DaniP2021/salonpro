@@ -333,6 +333,8 @@ function avisarAlCliente(clienteId, cuerpo, autorNombre) {
         para: cliente.telefono,
         plantilla: 'mensaje_nuevo',
         cuerpo: textoAviso,
+        // Variables para la plantilla de Meta, en el orden que ella espera.
+        datos: { negocio, autor: autorNombre, resumen, enlace },
       });
       return { canal: 'whatsapp', id: mensaje.id };
     } catch (error) {

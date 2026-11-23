@@ -162,6 +162,10 @@ export function guardarAjustes(objeto) {
 const COLUMNAS_NUEVAS = [
   ['clientes', 'token_acceso', "TEXT NOT NULL DEFAULT ''"],
   ['clientes', 'registrado_en', "TEXT NOT NULL DEFAULT ''"],
+  ['wa_plantillas', 'meta_nombre', "TEXT NOT NULL DEFAULT ''"],
+  ['wa_plantillas', 'meta_idioma', "TEXT NOT NULL DEFAULT 'es'"],
+  ['wa_plantillas', 'meta_variables', "TEXT NOT NULL DEFAULT ''"],
+  ['wa_mensajes', 'datos', "TEXT NOT NULL DEFAULT '{}'"],
 ];
 
 function migrarColumnas() {

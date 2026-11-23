@@ -300,10 +300,16 @@ CREATE TABLE IF NOT EXISTS wa_cuentas (
 );
 
 CREATE TABLE IF NOT EXISTS wa_plantillas (
-  clave    TEXT PRIMARY KEY,
-  nombre   TEXT NOT NULL,
-  cuerpo   TEXT NOT NULL,
-  activo   INTEGER NOT NULL DEFAULT 1
+  clave          TEXT PRIMARY KEY,
+  nombre         TEXT NOT NULL,
+  cuerpo         TEXT NOT NULL,
+  activo         INTEGER NOT NULL DEFAULT 1,
+  -- Plantilla aprobada en Meta. Vacío = se envía texto libre (solo válido
+  -- dentro de las 24 h desde el último mensaje del cliente).
+  meta_nombre    TEXT NOT NULL DEFAULT '',
+  meta_idioma    TEXT NOT NULL DEFAULT 'es',
+  -- Nombres de las variables, en el orden en que Meta las espera ({{1}}, {{2}}…)
+  meta_variables TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS wa_mensajes (
@@ -327,7 +333,10 @@ CREATE TABLE IF NOT EXISTS wa_mensajes (
   entregado_en     TEXT NOT NULL DEFAULT '',
   leido_en         TEXT NOT NULL DEFAULT '',
   respondido_en    TEXT NOT NULL DEFAULT '',
-  respuesta        TEXT NOT NULL DEFAULT ''
+  respuesta        TEXT NOT NULL DEFAULT '',
+  -- Valores de las variables del mensaje (JSON), para poder rellenar los
+  -- parámetros de una plantilla de Meta al momento del envío.
+  datos            TEXT NOT NULL DEFAULT '{}'
 );
 CREATE INDEX IF NOT EXISTS ix_wa_cola ON wa_mensajes(estado, programado_para);
 CREATE INDEX IF NOT EXISTS ix_wa_turno ON wa_mensajes(turno_id);

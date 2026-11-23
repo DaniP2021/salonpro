@@ -149,7 +149,7 @@ function cuerpoDePlantilla(clave) {
  */
 export function encolar({
   cuentaId = null, turnoId = null, clienteId = null, para, plantilla,
-  cuerpo, programadoPara = '', enlace = '',
+  cuerpo, programadoPara = '', enlace = '', datos = {},
 }) {
   const destino = normalizarTelefono(para);
   if (!destino) throw new ErrorApp('El cliente no tiene un teléfono válido para WhatsApp.', 400);
@@ -161,6 +161,9 @@ export function encolar({
     plantilla,
     cuerpo,
     enlace,
+    // Se guardan las variables para poder rellenar los parámetros de la
+    // plantilla de Meta al momento de enviar.
+    datos: JSON.stringify(datos || {}),
     estado: 'en_cola',
     proveedor: '',
     proveedor_msg_id: '',
@@ -210,6 +213,7 @@ export function encolarConfirmacion(turnoId, opciones = {}) {
     plantilla: 'turno_confirmacion',
     cuerpo,
     enlace: opciones.enlace || '',
+    datos: variables,
   });
   return { mensaje };
 }
@@ -253,6 +257,7 @@ export function programarRecordatorios(turnoId) {
       plantilla: deseo.clave,
       cuerpo: renderizar(cuerpoDePlantilla(deseo.clave), variables),
       programadoPara: cuando,
+      datos: variables,
     });
     programas.push(mensaje);
   }
@@ -377,6 +382,54 @@ function enviarPorEnlace(cuenta, mensaje) {
   return { ok: true, enlace, idExterno: '' };
 }
 
+/**
+ * Arma el cuerpo de la petición para la Cloud API de Meta.
+ *
+ * Si la plantilla del mensaje tiene una plantilla aprobada configurada
+ * (meta_nombre), se envía como `template`: eso funciona incluso fuera de la
+ * ventana de 24 h. Si no, se manda texto libre, que Meta solo acepta cuando el
+ * cliente escribió primero.
+ *
+ * Las variables se toman de `mensaje.datos` en el orden que indica
+ * `meta_variables` (los {{1}}, {{2}}… de Meta).
+ */
+export function construirCuerpoMeta(cuenta, mensaje) {
+  const base = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: normalizarTelefono(mensaje.para),
+  };
+
+  const plantilla = mensaje?.plantilla
+    ? db.uno('SELECT * FROM wa_plantillas WHERE clave = ?', [mensaje.plantilla])
+    : null;
+
+  if (!plantilla?.meta_nombre) {
+    return { ...base, type: 'text', text: { preview_url: true, body: mensaje.cuerpo } };
+  }
+
+  let valores = {};
+  try { valores = JSON.parse(mensaje.datos || '{}'); } catch { valores = {}; }
+
+  const nombres = String(plantilla.meta_variables || '')
+    .split(',').map((v) => v.trim()).filter(Boolean);
+
+  // Meta rechaza parámetros vacíos: si falta un valor se manda un guion.
+  const parametros = nombres.map((nombre) => {
+    const valor = valores[nombre];
+    const limpio = valor === undefined || valor === null || valor === '' ? '-' : String(valor);
+    return { type: 'text', text: limpio.slice(0, 1024) };
+  });
+
+  const template = {
+    name: plantilla.meta_nombre,
+    language: { code: plantilla.meta_idioma || 'es' },
+  };
+  if (parametros.length) template.components = [{ type: 'body', parameters: parametros }];
+
+  return { ...base, type: 'template', template };
+}
+
 async function enviarPorMeta(cuenta, mensaje) {
   if (!cuenta) return { ok: false, error: 'El mensaje no tiene cuenta de WhatsApp asociada.' };
   const token = tokenWhatsApp(cuenta.token_env);
@@ -390,13 +443,7 @@ async function enviarPorMeta(cuenta, mensaje) {
     const respuesta = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: normalizarTelefono(mensaje.para),
-        type: 'text',
-        text: { preview_url: true, body: mensaje.cuerpo },
-      }),
+      body: JSON.stringify(construirCuerpoMeta(cuenta, mensaje)),
       signal: control.signal,
     });
     const datos = await respuesta.json().catch(() => ({}));
