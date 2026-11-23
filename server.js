@@ -26,6 +26,21 @@ import { procesarCola as procesarColaCorreo } from './src/dominio/correo.js';
 export function crearServidor() {
   registrarTodo();
   return http.createServer((req, res) => {
+    // Registro de peticiones. Sirve para saber si un pedido que el navegador
+    // muestra como colgado llegó realmente al servidor.
+    const urlPedida = String(req.url || '');
+    if (urlPedida.startsWith('/api/') || urlPedida.startsWith('/mi/') || urlPedida.startsWith('/reservar')) {
+      const inicio = Date.now();
+      const ip = req.socket?.remoteAddress || '?';
+      res.once('finish', () => {
+        console.log(`[req] ${req.method} ${urlPedida} → ${res.statusCode} · ${Date.now() - inicio}ms · ${ip}`);
+      });
+      res.once('close', () => {
+        if (!res.writableFinished) {
+          console.log(`[req] ${req.method} ${urlPedida} → CORTADA a los ${Date.now() - inicio}ms · ${ip}`);
+        }
+      });
+    }
     manejarPeticion(req, res).catch((error) => {
       console.error('[petición]', error);
       if (res.writableEnded) return;
