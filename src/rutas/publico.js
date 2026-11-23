@@ -71,6 +71,63 @@ function marca(negocio) {
   return `<div class="marca">${esc(negocio.nombre_negocio || 'Salón de belleza')}</div>`;
 }
 
+/**
+ * Política de privacidad. Se pide una URL pública para publicar la app de Meta
+ * y además hace falta de verdad: el sistema guarda datos de clientes.
+ */
+function paginaPrivacidad(negocio) {
+  const nombre = esc(negocio.nombre_negocio || 'el salón');
+  const contacto = [
+    negocio.telefono ? `al teléfono ${esc(negocio.telefono)}` : '',
+    negocio.direccion ? `en ${esc(negocio.direccion)}` : '',
+  ].filter(Boolean).join(' o ');
+
+  const bloques = [
+    ['Quiénes somos',
+      `${nombre} es responsable de los datos personales que se cargan en este sistema. `
+      + `Podés contactarnos ${contacto || 'por los canales de atención del salón'}.`],
+
+    ['Qué datos guardamos',
+      'Nombre y apellido, teléfono, correo electrónico (opcional), mes y día de cumpleaños (opcional), '
+      + 'el historial de turnos y los mensajes que intercambiás con el salón por este medio.'],
+
+    ['Para qué los usamos',
+      'Gestionar tus turnos y avisarte de cambios, responder tus mensajes, enviarte recordatorios y —solo '
+      + 'si lo aceptaste— avisos de promociones. No usamos tus datos para ninguna otra finalidad.'],
+
+    ['Con quién se comparten',
+      'Con los servicios de mensajería que el salón usa para contactarte (WhatsApp y correo electrónico), '
+      + 'únicamente para enviarte los mensajes. No se venden ni se ceden a terceros con fines publicitarios.'],
+
+    ['Cuánto tiempo',
+      'Mientras tengas relación con el salón y hasta que pidas la baja. Después se conservan solo el tiempo '
+      + 'que exija una obligación legal.'],
+
+    ['Tus derechos',
+      'Podés pedir acceso a tus datos, corregirlos o solicitar que se supriman. Respondiendo este medio o '
+      + `contactando al salón ${contacto || ''} alcanza para iniciar el trámite.`],
+
+    ['Seguridad',
+      'El acceso al sistema es privado: cada persona entra con su usuario y contraseña y solo ve la '
+      + 'información que le corresponde. No se comparten datos entre clientes.'],
+
+    ['Cambios',
+      'Si esta política cambia, se publica en esta misma dirección. Última actualización: '
+      + `${new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.`],
+  ];
+
+  return pagina('Política de privacidad', `
+    ${marca(negocio)}
+    <h1>Política de privacidad</h1>
+    <p class="sub">Cómo tratamos los datos de nuestros clientes.</p>
+    ${bloques.map(([titulo, texto]) => `
+      <h2 style="font:600 15px/1.3 ui-sans-serif,system-ui,sans-serif;margin:22px 0 6px;color:#e7dfd2">${esc(titulo)}</h2>
+      <p style="margin:0;color:#a89f92;font-size:14px;line-height:1.6">${esc(texto)}</p>
+    `).join('')}
+    <p class="nota">${esc(negocio.nombre_negocio || '')}${negocio.telefono ? ` · ${esc(negocio.telefono)}` : ''}</p>
+  `);
+}
+
 function detalleTurno(turno, negocio) {
   const profesional = db.uno('SELECT nombre FROM profesionales WHERE id = ?', [turno.profesional_id]);
   const filas = [
@@ -128,6 +185,9 @@ export function registrar() {
   GET('/reservar', () => html(
     fs.readFileSync(path.join(DIR_PUBLICO, 'reservar.html'), 'utf8'),
   ), { publico: true });
+
+  // Meta exige una URL de política de privacidad para publicar la app.
+  GET('/privacidad', () => html(paginaPrivacidad(db.leerAjustes())), { publico: true });
 
   GET('/api/publico/negocio', () => publico.negocioPublico(), { publico: true });
 
