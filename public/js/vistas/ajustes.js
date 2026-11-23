@@ -87,6 +87,14 @@ export async function montar(contenedor, ctx) {
       clave: 'reserva_requiere_confirmacion', label: 'Las reservas quedan pendientes de aprobación', tipo: 'check',
       pista: 'Si lo desactivás, el turno se confirma solo y ocupa la agenda al instante.',
     },
+    { clave: 'separador_enlaces', tipo: 'separador', label: 'Enlaces que recibe el cliente' },
+    {
+      clave: 'url_publica', label: 'Dirección pública de la app', tipo: 'texto',
+      placeholder: 'https://salon.tudominio.com',
+      pista: 'Se usa en los enlaces del portal y de confirmación que salen por WhatsApp o email. '
+        + 'Tiene que ser un dominio con HTTPS: WhatsApp no convierte en enlace una dirección con IP, '
+        + 'así que el cliente no podría tocarlo. Dejalo vacío para usar la dirección automática.',
+    },
   ], valoresAjustes);
 
   const tarjetaNegocio = el('div', { clase: 'tarjeta' },

@@ -14,8 +14,20 @@ function nuevoToken() {
   return crypto.randomBytes(24).toString('base64url');
 }
 
+/**
+ * Dirección base para los enlaces que recibe el cliente.
+ *
+ * Prioridad: lo que se cargue en Ajustes (url_publica) y, si está vacío, lo que
+ * detecte la app. Hace falta un dominio con HTTPS: WhatsApp no convierte en
+ * enlace una dirección con IP, así que el cliente no puede tocarla.
+ */
+export function basePublica() {
+  const configurada = db.leerAjuste('url_publica', '');
+  return (configurada || URL_BASE).replace(/\/+$/, '');
+}
+
 export function enlaceDe(token) {
-  return `${URL_BASE}/mi/${token}`;
+  return `${basePublica()}/mi/${token}`;
 }
 
 /** Devuelve el token del cliente, generándolo la primera vez. */

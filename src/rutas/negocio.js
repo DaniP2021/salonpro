@@ -11,7 +11,7 @@ const CLAVES_EDITABLES = [
   'nombre_negocio', 'rubro', 'moneda', 'simbolo', 'zona_horaria', 'direccion', 'telefono',
   'instagram', 'slot_min', 'recordatorio_24h', 'recordatorio_2h', 'propina_para_profesional',
   'reserva_publica_min_horas', 'reserva_publica_max_dias', 'reserva_requiere_confirmacion',
-  'mensaje_bienvenida', 'web_publica_activa',
+  'mensaje_bienvenida', 'web_publica_activa', 'url_publica',
   'correo_activo', 'correo_confirmacion_cliente', 'correo_aviso_profesional', 'correo_recordatorio',
 ];
 

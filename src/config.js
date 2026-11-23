@@ -106,6 +106,10 @@ export const CONFIG_POR_DEFECTO = {
   reserva_publica_max_dias: '45',
   reserva_requiere_confirmacion: '1',
   mensaje_bienvenida: '',
+  // Dirección pública para los enlaces que se envían (WhatsApp, email).
+  // Vacío = se detecta automáticamente. Para que el cliente pueda tocar el
+  // enlace hace falta un dominio con HTTPS.
+  url_publica: '',
   // Correo
   correo_activo: '0',
   correo_confirmacion_cliente: '1',

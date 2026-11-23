@@ -8,6 +8,7 @@
 //   meta     · WhatsApp Business Cloud API. Requiere token en variable de entorno.
 
 import { INTERVALO_DESPACHO_MS, URL_BASE, tokenWhatsApp } from '../config.js';
+import { basePublica } from './token-portal.js';
 import * as db from '../db.js';
 import {
   ErrorApp, ahoraTexto, DIAS, MESES, normalizarTelefono, parseFecha, sumarMinutos, texto, validar,
@@ -202,7 +203,7 @@ export function encolarConfirmacion(turnoId, opciones = {}) {
   const cuenta = cuentaPara(turno.profesional_id);
   const variables = variablesDeTurno(turnoId);
   const token = crearTokenConfirmacion(turnoId);
-  variables.link_confirmacion = `${URL_BASE}/c/${token}`;
+  variables.link_confirmacion = `${basePublica()}/c/${token}`;
   const cuerpo = renderizar(cuerpoDePlantilla('turno_confirmacion'), variables);
 
   const mensaje = encolar({
@@ -247,7 +248,7 @@ export function programarRecordatorios(turnoId) {
     );
     if (yaExiste) continue;
     const variables = variablesDeTurno(turnoId);
-    variables.link_confirmacion = `${URL_BASE}/c/${crearTokenConfirmacion(turnoId)}`;
+    variables.link_confirmacion = `${basePublica()}/c/${crearTokenConfirmacion(turnoId)}`;
     const cuenta = cuentaPara(turno.profesional_id);
     const mensaje = encolar({
       cuentaId: cuenta?.id ?? null,
