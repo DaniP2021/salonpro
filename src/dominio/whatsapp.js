@@ -7,6 +7,7 @@
 //   enlace   · genera un link wa.me con el texto precargado (envío manual humano).
 //   meta     · WhatsApp Business Cloud API. Requiere token en variable de entorno.
 
+import crypto from 'node:crypto';
 import { INTERVALO_DESPACHO_MS, URL_BASE, tokenWhatsApp } from '../config.js';
 import { basePublica } from './token-portal.js';
 import * as db from '../db.js';
@@ -461,10 +462,26 @@ async function enviarPorMeta(cuenta, mensaje) {
 
 // ---------------------------------------------------------------- webhook
 
+/**
+ * Token que Meta usa para verificar el webhook. Se toma de la variable de
+ * entorno si existe; si no, se genera uno y se guarda en Ajustes, así no hace
+ * falta configurar variables para poner el webhook en marcha.
+ */
+export function tokenWebhook({ crear = true } = {}) {
+  const propio = db.leerAjuste('wa_verify_token', '');
+  const esperado = process.env.SALON_WA_VERIFY_TOKEN || propio;
+  if (esperado) return esperado;
+  if (!crear) return '';
+
+  const nuevo = `salon-${crypto.randomBytes(12).toString('hex')}`;
+  db.guardarAjustes({ wa_verify_token: nuevo });
+  return nuevo;
+}
+
 export function verificarWebhook(modo, token, challenge) {
-  const esperado = process.env.SALON_WA_VERIFY_TOKEN || '';
+  const esperado = tokenWebhook({ crear: false });
   if (modo !== 'subscribe') return { ok: false, motivo: 'modo inválido' };
-  if (!esperado) return { ok: false, motivo: 'falta SALON_WA_VERIFY_TOKEN' };
+  if (!esperado) return { ok: false, motivo: 'falta el token de verificación' };
   if (token !== esperado) return { ok: false, motivo: 'token inválido' };
   return { ok: true, challenge: challenge || '' };
 }
@@ -654,8 +671,11 @@ export function estadoGeneral() {
       "SELECT COUNT(*) FROM wa_mensajes WHERE enviado_en >= ? AND enviado_en <= ?",
       [`${ahoraTexto().slice(0, 10)} 00:00`, `${ahoraTexto().slice(0, 10)} 23:59`],
     ),
-    url_webhook: `${URL_BASE}/api/whatsapp/webhook`,
-    verificacion_configurada: !!process.env.SALON_WA_VERIFY_TOKEN,
+    url_webhook: `${basePublica()}/api/whatsapp/webhook`,
+    verificacion_configurada: true,
+    // Se genera la primera vez que se consulta, así está siempre disponible
+    // para copiarlo en el panel de Meta.
+    token_webhook: tokenWebhook(),
     intervalo_despacho_seg: Math.round(INTERVALO_DESPACHO_MS / 1000),
     nota_lectura:
       'El estado "leído" depende de que el cliente tenga activados los recibos de lectura en WhatsApp. ' +

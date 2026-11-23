@@ -5,6 +5,7 @@ import { GET, POST, PUT, DELETE, creado, textoRespuesta } from '../router.js';
 import { ErrorApp } from '../util.js';
 import { ROL_ADMIN, ROL_GESTION, ROL_TODOS, profesionalPermitido } from './_comun.js';
 import * as whatsapp from '../dominio/whatsapp.js';
+import * as mensajeria from '../dominio/mensajeria.js';
 
 export function registrar() {
   GET('/api/whatsapp/cuentas', () => whatsapp.listarCuentas(), { roles: ROL_GESTION });
@@ -111,7 +112,23 @@ export function registrar() {
   // --- recepción de estados y mensajes entrantes (Meta llama con POST)
   POST('/api/whatsapp/webhook', (ctx) => {
     const resultado = whatsapp.procesarWebhook(ctx.cuerpo);
-    return { ok: true, ...resultado };
+
+    // Lo que escribe el cliente entra al mismo hilo que ve administración,
+    // sin importar desde dónde haya escrito.
+    const guardados = [];
+    for (const entrante of resultado.mensajes || []) {
+      try {
+        guardados.push(mensajeria.registrarEntranteWhatsapp({
+          telefono: entrante.de,
+          cuerpo: entrante.cuerpo,
+          nombre: entrante.nombre_perfil || '',
+        }));
+      } catch (error) {
+        guardados.push({ omitido: error.message });
+      }
+    }
+
+    return { ok: true, ...resultado, conversaciones: guardados };
   }, { publico: true });
 
   /** Reprocesa el estado de un turno a partir de las respuestas recibidas. */

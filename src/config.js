@@ -110,6 +110,8 @@ export const CONFIG_POR_DEFECTO = {
   // Vacío = se detecta automáticamente. Para que el cliente pueda tocar el
   // enlace hace falta un dominio con HTTPS.
   url_publica: '',
+  // Token que Meta usa para verificar el webhook. Se genera solo la primera vez.
+  wa_verify_token: '',
   // Correo
   correo_activo: '0',
   correo_confirmacion_cliente: '1',

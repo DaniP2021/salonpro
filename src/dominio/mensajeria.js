@@ -8,7 +8,7 @@
 // administración y el profesional que las escribió.
 
 import * as db from '../db.js';
-import { ErrorApp, ahoraTexto, texto, textoObligatorio, validar } from '../util.js';
+import { ErrorApp, ahoraTexto, normalizarTelefono, texto, textoObligatorio, validar } from '../util.js';
 import * as whatsapp from './whatsapp.js';
 import * as correo from './correo.js';
 import { enlacePortal } from './token-portal.js';
@@ -236,7 +236,7 @@ export function marcarLeida(conversacionId, usuario) {  const marca = lector(usu
  * Mensaje escrito por el cliente desde su portal.
  * No hay sesión: la identidad ya la resolvió el token del portal.
  */
-export function enviarDelCliente(conversacionId, cliente, cuerpoCrudo) {
+export function enviarDelCliente(conversacionId, cliente, cuerpoCrudo, opciones = {}) {
   const conversacion = db.uno('SELECT * FROM conversaciones WHERE id = ?', [conversacionId]);
   if (!conversacion) throw new ErrorApp('La conversación no existe.', 404);
   if (Number(conversacion.cliente_id) !== Number(cliente.id)) {
@@ -251,7 +251,7 @@ export function enviarDelCliente(conversacionId, cliente, cuerpoCrudo) {
     autor_id: cliente.id,
     autor_nombre: cliente.nombre || 'Cliente',
     cuerpo,
-    canal: 'app',
+    canal: opciones.canal === 'whatsapp' ? 'whatsapp' : 'app',
     interno: 0,
     creado_en: ahoraTexto(),
   });
@@ -296,6 +296,44 @@ export function mensajesParaCliente(conversacionId) {
      FROM mensajes WHERE conversacion_id = ? AND interno = 0 ORDER BY id LIMIT 500`,
     [conversacionId],
   );
+}
+
+/**
+ * Mensaje que llega por el webhook de WhatsApp: se busca la ficha del cliente
+ * por el teléfono y se agrega al mismo hilo que ve administración.
+ * Si no hay ficha con ese número, no se inventa nada: se devuelve el motivo.
+ */
+export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '' }) {
+  const limpio = String(telefono || '').replace(/\D/g, '');
+  const textoMensaje = texto(cuerpo, 4000);
+  if (!limpio || !textoMensaje) return { omitido: 'mensaje vacío o sin remitente' };
+
+  // Puede haber más de una ficha con el mismo número (una vieja de prueba y
+  // una real, por ejemplo). Primero se busca coincidencia exacta del número
+  // normalizado; si hay varias, gana la ficha más nueva.
+  const clientes = db.consultar("SELECT * FROM clientes WHERE telefono <> '' ORDER BY id DESC");
+  const normalizado = (valor) => normalizarTelefono(valor) || String(valor || '').replace(/\D/g, '');
+
+  let cliente = clientes.find((c) => normalizado(c.telefono) === normalizado(limpio));
+  if (!cliente) {
+    cliente = clientes.find((c) => {
+      const t = String(c.telefono).replace(/\D/g, '');
+      if (!t) return false;
+      return t.endsWith(limpio.slice(-8)) || limpio.endsWith(t.slice(-8));
+    });
+  }
+  if (!cliente) return { omitido: `no hay ficha con el teléfono ${limpio}` };
+
+  const conversacion = conversacionDeCliente(cliente.id, { crear: true });
+  const mensaje = enviarDelCliente(conversacion.id, cliente, textoMensaje, { canal: 'whatsapp' });
+
+  return {
+    cliente_id: cliente.id,
+    cliente: cliente.nombre,
+    conversacion_id: conversacion.id,
+    mensaje_id: mensaje.id,
+    nombre_whatsapp: nombre || '',
+  };
 }
 
 // ------------------------------------------------------------------- avisos
