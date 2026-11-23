@@ -116,7 +116,12 @@ test('la página de reserva se sirve sin sesión', async () => {
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.match(html, /Reservá tu turno|Reservar turno/i);
-  assert.match(html, /api\/publico/);
+
+  // El JavaScript va en un archivo aparte: la CSP no permite scripts
+  // incrustados en el HTML, así que tiene que estar referenciado así.
+  assert.match(html, /<script type="module" src="\/js\/reservar\.js">/);
+  const js = await (await fetch(`${base}/js/reservar.js`)).text();
+  assert.match(js, /api\/publico/);
 });
 
 test('devuelve los horarios libres del día elegido', async () => {

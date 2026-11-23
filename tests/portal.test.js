@@ -261,5 +261,11 @@ test('la página del portal se sirve sin sesión', async () => {
   const res = await fetch(`${base}/mi/${ctx.token}`);
   assert.equal(res.status, 200);
   const html = await res.text();
-  assert.match(html, /api\/mi\//);
+
+  // La CSP de la app no permite scripts incrustados: el JavaScript tiene que
+  // venir de un archivo del propio sitio.
+  assert.match(html, /<script type="module" src="\/js\/portal\.js">/);
+  assert.ok(!/<script type="module">/.test(html), 'no debe quedar script incrustado');
+  const js = await (await fetch(`${base}/js/portal.js`)).text();
+  assert.match(js, /api\/mi\//);
 });
