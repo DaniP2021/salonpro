@@ -312,9 +312,12 @@ export function mensajesParaCliente(conversacionId) {
 /**
  * Mensaje que llega por el webhook de WhatsApp: se busca la ficha del cliente
  * por el teléfono y se agrega al mismo hilo que ve administración.
- * Si no hay ficha con ese número, no se inventa nada: se devuelve el motivo.
+ *
+ * Si el número no tiene ficha, se crea una: es un cliente nuevo que escribió
+ * por primera vez. Se guarda con el nombre del perfil de WhatsApp, o con el
+ * teléfono si no lo expone.
  */
-export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '' }) {
+export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '', crearSiFalta = true }) {
   const limpio = String(telefono || '').replace(/\D/g, '');
   const textoMensaje = texto(cuerpo, 4000);
   if (!limpio || !textoMensaje) return { omitido: 'mensaje vacío o sin remitente' };
@@ -326,6 +329,8 @@ export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '' }) {
   const normalizado = (valor) => normalizarTelefono(valor) || String(valor || '').replace(/\D/g, '');
 
   let cliente = clientes.find((c) => normalizado(c.telefono) === normalizado(limpio));
+  let recienCreado = false;
+
   if (!cliente) {
     cliente = clientes.find((c) => {
       const t = String(c.telefono).replace(/\D/g, '');
@@ -333,7 +338,20 @@ export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '' }) {
       return t.endsWith(limpio.slice(-8)) || limpio.endsWith(t.slice(-8));
     });
   }
-  if (!cliente) return { omitido: `no hay ficha con el teléfono ${limpio}` };
+
+  if (!cliente) {
+    if (!crearSiFalta) return { omitido: `no hay ficha con el teléfono ${limpio}` };
+    const nombreFicha = texto(nombre, 120) || `Cliente ${limpio.slice(-4)}`;
+    const nuevoId = db.insertar('clientes', {
+      nombre: nombreFicha,
+      telefono: limpio,
+      acepta_whatsapp: 1,
+      notas: 'Alta automática: escribió por WhatsApp sin ficha previa.',
+      creado_en: ahoraTexto(),
+    });
+    cliente = db.uno('SELECT * FROM clientes WHERE id = ?', [nuevoId]);
+    recienCreado = true;
+  }
 
   const conversacion = conversacionDeCliente(cliente.id, { crear: true });
   const mensaje = enviarDelCliente(conversacion.id, cliente, textoMensaje, { canal: 'whatsapp' });
@@ -344,6 +362,7 @@ export function registrarEntranteWhatsapp({ telefono, cuerpo, nombre = '' }) {
     conversacion_id: conversacion.id,
     mensaje_id: mensaje.id,
     nombre_whatsapp: nombre || '',
+    recien_creado: recienCreado,
   };
 }
 

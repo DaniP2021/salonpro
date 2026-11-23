@@ -661,7 +661,12 @@ export function procesarWebhook(payload) {
         if (r) resultados.estados.push(r);
       }
       for (const mensaje of valor.messages || []) {
-        resultados.mensajes.push(aplicarMensajeEntrante(mensaje, cuenta));
+        const resultado = aplicarMensajeEntrante(mensaje, cuenta);
+        // El nombre del perfil llega en "contacts", no en el mensaje: es el
+        // que se usa para dar de alta a un cliente nuevo.
+        const contacto = (valor.contacts || []).find((c) => c.wa_id === mensaje.from);
+        resultado.nombre_perfil = texto(contacto?.profile?.name, 120);
+        resultados.mensajes.push(resultado);
       }
     }
   }
