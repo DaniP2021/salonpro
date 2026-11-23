@@ -128,6 +128,49 @@ function paginaPrivacidad(negocio) {
   `);
 }
 
+/**
+ * Instrucciones para pedir la eliminación de datos. Meta la exige para publicar
+ * la app y es la contraparte de la política de privacidad.
+ */
+function paginaEliminarDatos(negocio) {
+  const nombre = esc(negocio.nombre_negocio || 'el salón');
+  const contacto = [
+    negocio.telefono ? `al ${esc(negocio.telefono)}` : '',
+    'respondiendo al mensaje de WhatsApp por el que recibiste el aviso',
+  ].filter(Boolean).join(' o ');
+
+  const bloques = [
+    ['Cómo pedirlo',
+      `Escribinos ${contacto} indicando que querés eliminar tus datos. No hace falta que expliques el motivo.`],
+
+    ['Qué se elimina',
+      'Tu ficha de cliente (nombre, teléfono, correo y cumpleaños), el historial de turnos y las conversaciones '
+      + 'que hayas tenido con el salón por este medio.'],
+
+    ['Qué no se puede eliminar',
+      'Los registros contables de servicios ya prestados, porque el salón está obligado a conservarlos por '
+      + 'obligaciones fiscales. Se conservan sin tus datos de contacto.'],
+
+    ['Cuánto tarda',
+      'Hasta 30 días hábiles desde que recibimos el pedido. Te confirmamos por el mismo medio cuando esté hecho.'],
+
+    ['Antes de pedirlo',
+      'Tené en cuenta que al eliminar tu ficha se pierden tus turnos reservados y no vas a recibir '
+      + 'recordatorios. Si solo querés dejar de recibir avisos, pedí la baja de mensajes en lugar de la eliminación.'],
+  ];
+
+  return pagina('Eliminación de datos', `
+    ${marca(negocio)}
+    <h1>Eliminación de datos</h1>
+    <p class="sub">Cómo pedir la baja de tu información en ${nombre}.</p>
+    ${bloques.map(([titulo, texto]) => `
+      <h2 style="font:600 15px/1.3 ui-sans-serif,system-ui,sans-serif;margin:22px 0 6px;color:#e7dfd2">${esc(titulo)}</h2>
+      <p style="margin:0;color:#a89f92;font-size:14px;line-height:1.6">${esc(texto)}</p>
+    `).join('')}
+    <p class="nota">${esc(negocio.nombre_negocio || '')}${negocio.telefono ? ` · ${esc(negocio.telefono)}` : ''}</p>
+  `);
+}
+
 function detalleTurno(turno, negocio) {
   const profesional = db.uno('SELECT nombre FROM profesionales WHERE id = ?', [turno.profesional_id]);
   const filas = [
@@ -188,6 +231,8 @@ export function registrar() {
 
   // Meta exige una URL de política de privacidad para publicar la app.
   GET('/privacidad', () => html(paginaPrivacidad(db.leerAjustes())), { publico: true });
+
+  GET('/eliminar-datos', () => html(paginaEliminarDatos(db.leerAjustes())), { publico: true });
 
   GET('/api/publico/negocio', () => publico.negocioPublico(), { publico: true });
 
