@@ -140,7 +140,7 @@ export function listarTurnos(filtros = {}) {
   }
   const sql = `${SQL_TURNO}
     ${donde.length ? `WHERE ${donde.join(' AND ')}` : ''}
-    ORDER BY t.inicio, p.nombre
+    ORDER BY t.inicio ${filtros.orden === 'desc' ? 'DESC' : 'ASC'}, p.nombre
     LIMIT ?`;
   const limite = Math.min(entero(filtros.limite, 500) || 500, 2000);
   return db.consultar(sql, [...params, limite]).map(normalizarTurno);

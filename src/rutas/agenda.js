@@ -78,6 +78,8 @@ export function registrar() {
         cliente_id: ctx.qNum('cliente_id'),
         estado: ctx.q('estado'),
         q: ctx.q('q'),
+        // El listado de Turnos muestra primero lo más reciente.
+        orden: ctx.q('orden') === 'asc' ? 'asc' : 'desc',
         limite: ctx.qNum('limite', 500),
       }),
       desde,
