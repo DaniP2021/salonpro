@@ -6,6 +6,14 @@ data/
 *.db-journal
 secreto.key
 
+# Demo NetBird (base temporal y logs; nunca se versionan)
+data/demo-netbird.db
+data/demo-netbird.db-wal
+data/demo-netbird.db-shm
+data/demo-netbird.log
+data/demo-netbird*.log
+data/demo-credenciales.txt
+
 # Entorno
 .env
 .env.*

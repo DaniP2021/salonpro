@@ -48,6 +48,7 @@ export function obtener(id) {
   if (!cliente) return null;
   cliente.historial = db.consultar(
     `SELECT t.id, t.inicio, t.fin, t.estado, t.precio_total_centavos, t.propina_centavos,
+            t.profesional_id,
             p.nombre AS profesional_nombre, p.color AS profesional_color,
             (SELECT GROUP_CONCAT(nombre, ' + ') FROM (SELECT nombre FROM turno_items WHERE turno_id = t.id ORDER BY orden)) AS servicios,
             (SELECT COALESCE(SUM(monto_centavos), 0) FROM pagos WHERE turno_id = t.id) AS pagado_centavos

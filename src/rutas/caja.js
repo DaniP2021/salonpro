@@ -1,7 +1,7 @@
 // Rutas de cobranza, ventas de productos y caja del día.
 
 import { GET, POST, DELETE, creado } from '../router.js';
-import { ROL_ADMIN, ROL_GESTION, ROL_TODOS, actor, profesionalPermitido } from './_comun.js';
+import { ROL_ADMIN, ROL_TODOS, actor, profesionalPermitido } from './_comun.js';
 import * as caja from '../dominio/caja.js';
 
 export function registrar() {
@@ -61,5 +61,5 @@ export function registrar() {
   GET('/api/caja/resumen', (ctx) => {
     ctx.exigirAdmin();
     return caja.arqueo(ctx.q('fecha'));
-  }, { roles: ROL_GESTION });
+  }, { roles: ROL_ADMIN });
 }

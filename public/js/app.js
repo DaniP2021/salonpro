@@ -1,6 +1,6 @@
 // Arranque, identidad visual, navegación y enrutado de la SPA.
 
-import { api, cargarCatalogos, estado, esAdmin, esGestion, esProfesional } from './api.js';
+import { api, cargarCatalogos, estado } from './api.js';
 import {
   aviso, boton, capa, cargando, campos, el, icono, mensajeError, vaciar,
 } from './ui.js';
@@ -21,7 +21,7 @@ const RAIZ = document.getElementById('raiz');
 
 // Se muestra abajo del menú. Si no coincide con la última entrega, el navegador
 // está usando archivos viejos de la caché.
-const VERSION = '1.3';
+const VERSION = '1.4';
 
 const MENU = [
   {
@@ -37,19 +37,27 @@ const MENU = [
     grupo: 'Gestión',
     items: [
       { clave: 'caja', texto: 'Caja y cobros', icono: 'caja', ruta: '#/caja' },
-      { clave: 'reportes', texto: 'Reportes', icono: 'reportes', ruta: '#/reportes' },
+      // Recepción no ve liquidaciones ni márgenes: no entra a Reportes.
+      { clave: 'reportes', texto: 'Reportes', icono: 'reportes', ruta: '#/reportes', roles: ['admin', 'profesional'] },
     ],
   },
   {
     grupo: 'Configuración',
     items: [
-      { clave: 'catalogo', texto: 'Catálogo', icono: 'catalogo', ruta: '#/catalogo', soloGestion: true },
-      { clave: 'equipo', texto: 'Equipo', icono: 'equipo', ruta: '#/equipo', soloGestion: true },
+      { clave: 'catalogo', texto: 'Catálogo', icono: 'catalogo', ruta: '#/catalogo', roles: ['admin', 'recepcion'] },
+      { clave: 'equipo', texto: 'Equipo', icono: 'equipo', ruta: '#/equipo', roles: ['admin', 'recepcion'] },
       { clave: 'whatsapp', texto: 'WhatsApp', icono: 'whatsapp', ruta: '#/whatsapp' },
       { clave: 'ajustes', texto: 'Ajustes', icono: 'ajustes', ruta: '#/ajustes' },
     ],
   },
 ];
+
+// Vistas que no todo el mundo puede abrir por URL directa, aunque no estén en el menú.
+const VISTAS_POR_ROL = {
+  catalogo: ['admin', 'recepcion'],
+  equipo: ['admin', 'recepcion'],
+  reportes: ['admin', 'profesional'],
+};
 
 const RUTAS = [
   { prueba: /^#\/hoy\/?$/, vista: vistaHoy },
@@ -147,7 +155,7 @@ function construirShell() {
   for (const grupo of MENU) {
     nav.appendChild(el('div', { clase: 'nav-grupo', texto: grupo.grupo }));
     for (const item of grupo.items) {
-      if (item.soloGestion && !esGestion()) continue;
+      if (item.roles && !item.roles.includes(estado.usuario?.rol)) continue;
       const enlace = el('a', { href: item.ruta },
         icono(item.icono),
         el('span', { texto: item.texto }));
@@ -258,9 +266,11 @@ async function renderizar() {
   const coincidencia = elegida.prueba.exec(hash);
   const params = elegida.params ? elegida.params(coincidencia) : {};
 
-  // Un profesional no entra a Catálogo ni Equipo por URL directa.
+  // Un rol sin permiso no entra a la vista ni escribiendo la URL a mano.
   const clave = (hash.match(/^#\/(\w+)/) || [])[1];
-  if (['catalogo', 'equipo'].includes(clave) && !esGestion()) {
+  const permitidos = VISTAS_POR_ROL[clave];
+  if (permitidos && !permitidos.includes(estado.usuario?.rol)) {
+    aviso('Tu rol no tiene acceso a esa pantalla.', 'error');
     navegar('#/hoy');
     renderizando = false;
     return;

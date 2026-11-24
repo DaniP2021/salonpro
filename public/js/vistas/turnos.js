@@ -1,6 +1,6 @@
 // Vista "Turnos": la lista completa con filtros. Para buscar, auditar y corregir.
 
-import { api, estado, esGestion } from '../api.js';
+import { api, estado, esGestion, esProfesional, profesionalesVisibles } from '../api.js';
 import {
   dinero, ETIQUETA_ESTADO, fechaCorta, fechaNumerica, finMes, hoyISO, inicioMes, soloFecha,
 } from '../formato.js';
@@ -49,8 +49,10 @@ async function pintar(contenedor, ctx, filtros) {
   const selectorProfesional = el('select', {
     on: { change: (e) => { filtros.profesional_id = e.target.value; pintar(contenedor, ctx, filtros); } },
   });
-  selectorProfesional.appendChild(el('option', { value: '', texto: 'Todo el equipo' }));
-  for (const profesional of estado.profesionales) {
+  selectorProfesional.appendChild(el('option', {
+    value: '', texto: esProfesional() ? 'Mi agenda' : 'Todo el equipo',
+  }));
+  for (const profesional of profesionalesVisibles()) {
     const opcion = el('option', { value: profesional.id, texto: profesional.nombre });
     if (String(filtros.profesional_id) === String(profesional.id)) opcion.selected = true;
     selectorProfesional.appendChild(opcion);

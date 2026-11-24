@@ -93,7 +93,10 @@ export function registrar() {
     });
   }, { roles: ROL_TODOS });
 
-  GET('/api/agenda/hoy', (ctx) => agenda.resumenDia(ctx.q('fecha', hoyTexto())), { roles: ROL_TODOS });
+  GET('/api/agenda/hoy', (ctx) => agenda.resumenDia(
+    ctx.q('fecha', hoyTexto()),
+    profesionalPermitido(ctx, ctx.qNum('profesional_id')),
+  ), { roles: ROL_TODOS });
 
   POST('/api/turnos', async (ctx) => {
     const datos = { ...ctx.cuerpo };

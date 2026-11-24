@@ -273,6 +273,12 @@ export function listarMensajes(filtros = {}) {
   if (filtros.estado) { donde.push('m.estado = ?'); params.push(filtros.estado); }
   if (filtros.turno_id) { donde.push('m.turno_id = ?'); params.push(Number(filtros.turno_id)); }
   if (filtros.plantilla) { donde.push('m.plantilla = ?'); params.push(filtros.plantilla); }
+  if (filtros.profesional_id) {
+    // El profesional ve los mensajes de sus turnos y los de su propia cuenta.
+    donde.push(`(t.profesional_id = ? OR m.cuenta_id IN (
+      SELECT id FROM wa_cuentas WHERE profesional_id = ?))`);
+    params.push(Number(filtros.profesional_id), Number(filtros.profesional_id));
+  }
   if (filtros.q) {
     donde.push('(m.para LIKE ? OR LOWER(m.cuerpo) LIKE ?)');
     params.push(`%${filtros.q}%`, `%${String(filtros.q).toLowerCase()}%`);
@@ -575,23 +581,33 @@ export function confirmarPorToken(token, accion) {
 
 // ------------------------------------------------------------- diagnóstico
 
-export function estadoGeneral() {
+export function estadoGeneral(profesionalId = null) {
   const cuentas = listarCuentas();
   const conMeta = cuentas.filter((c) => c.proveedor === 'meta' && c.activo);
   let modo = 'consola';
   if (conMeta.length) modo = 'meta';
   else if (cuentas.some((c) => c.proveedor === 'enlace' && c.activo)) modo = 'enlace';
+
+  // Alcance: un profesional solo cuenta lo suyo (sus turnos o su cuenta).
+  const prof = profesionalId ? Number(profesionalId) : null;
+  const filtro = prof
+    ? ` AND (turno_id IN (SELECT id FROM turnos WHERE profesional_id = ?)
+             OR cuenta_id IN (SELECT id FROM wa_cuentas WHERE profesional_id = ?))`
+    : '';
+  const params = prof ? [prof, prof] : [];
+  const contar = (condicion) => db.numero(`SELECT COUNT(*) FROM wa_mensajes WHERE ${condicion}${filtro}`, params);
+
   return {
     modo,
     cuentas: cuentas.length,
     cuentas_meta: conMeta.length,
     tokens_configurados: conMeta.filter((c) => c.token_configurado).length,
-    en_cola: db.numero("SELECT COUNT(*) FROM wa_mensajes WHERE estado = 'en_cola'"),
-    fallidos: db.numero("SELECT COUNT(*) FROM wa_mensajes WHERE estado = 'fallido'"),
-    leidos: db.numero("SELECT COUNT(*) FROM wa_mensajes WHERE estado IN ('leido', 'respondido')"),
+    en_cola: contar("estado = 'en_cola'"),
+    fallidos: contar("estado = 'fallido'"),
+    leidos: contar("estado IN ('leido', 'respondido')"),
     enviados_hoy: db.numero(
-      "SELECT COUNT(*) FROM wa_mensajes WHERE enviado_en >= ? AND enviado_en <= ?",
-      [`${ahoraTexto().slice(0, 10)} 00:00`, `${ahoraTexto().slice(0, 10)} 23:59`],
+      `SELECT COUNT(*) FROM wa_mensajes WHERE enviado_en >= ? AND enviado_en <= ?${filtro}`,
+      [`${ahoraTexto().slice(0, 10)} 00:00`, `${ahoraTexto().slice(0, 10)} 23:59`, ...params],
     ),
     url_webhook: `${URL_BASE}/api/whatsapp/webhook`,
     verificacion_configurada: !!process.env.SALON_WA_VERIFY_TOKEN,

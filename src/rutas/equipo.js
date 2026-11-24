@@ -1,11 +1,18 @@
 // Rutas del equipo: profesionales, horarios, bloqueos y alquiler del espacio.
 
 import { GET, POST, PUT, DELETE, creado } from '../router.js';
+import * as db from '../db.js';
+import { ErrorApp } from '../util.js';
 import { ROL_ADMIN, ROL_GESTION, ROL_TODOS, profesionalPermitido } from './_comun.js';
 import * as equipo from '../dominio/equipo.js';
 
 export function registrar() {
-  GET('/api/profesionales', (ctx) => equipo.listar(ctx.qBool('incluir_inactivos')), { roles: ROL_TODOS });
+  GET('/api/profesionales', (ctx) => {
+    const lista = equipo.listar(ctx.qBool('incluir_inactivos'));
+    if (ctx.usuario.rol !== 'profesional') return lista;
+    // Datos públicos del equipo: sin comisiones, alquiler ni vínculo de usuario.
+    return lista.map(({ id, nombre, color, activo, modalidad }) => ({ id, nombre, color, activo, modalidad }));
+  }, { roles: ROL_TODOS });
 
   POST('/api/profesionales', (ctx) => creado(equipo.crear(ctx.cuerpo)), { roles: ROL_ADMIN });
 
@@ -22,7 +29,10 @@ export function registrar() {
 
   DELETE('/api/profesionales/{id:num}', (ctx) => equipo.desactivar(ctx.paramId()), { roles: ROL_ADMIN });
 
-  GET('/api/profesionales/{id:num}/horarios', (ctx) => equipo.horariosSemana(ctx.paramId()), { roles: ROL_TODOS });
+  GET('/api/profesionales/{id:num}/horarios', (ctx) => {
+    ctx.exigirSobreProfesional(ctx.paramId());
+    return equipo.horariosSemana(ctx.paramId());
+  }, { roles: ROL_TODOS });
 
   PUT('/api/profesionales/{id:num}/horarios', (ctx) => {
     ctx.exigirSobreProfesional(ctx.paramId());
@@ -44,7 +54,14 @@ export function registrar() {
     return creado(equipo.crearBloqueo(ctx.cuerpo));
   }, { roles: ROL_TODOS });
 
-  DELETE('/api/bloqueos/{id:num}', (ctx) => equipo.eliminarBloqueo(ctx.paramId()), { roles: ROL_GESTION });
+  DELETE('/api/bloqueos/{id:num}', (ctx) => {
+    const bloqueo = db.uno('SELECT * FROM bloqueos WHERE id = ?', [ctx.paramId()]);
+    if (!bloqueo) throw new ErrorApp('El bloqueo no existe.', 404);
+    if (ctx.usuario.rol === 'profesional' && Number(bloqueo.profesional_id) !== Number(ctx.usuario.profesional_id)) {
+      throw new ErrorApp('Solo podés borrar tus propios bloqueos.', 403);
+    }
+    return equipo.eliminarBloqueo(ctx.paramId());
+  }, { roles: ROL_TODOS });
 
   // --- alquiler del espacio
   GET('/api/alquileres', (ctx) => equipo.listarAlquileres({

@@ -46,6 +46,10 @@ export function registrarPago(datos, opciones = {}) {
   if (ventaId) {
     const venta = db.uno('SELECT * FROM ventas WHERE id = ?', [ventaId]);
     if (!venta) throw new ErrorApp('La venta no existe.', 404);
+    // El profesional solo cobra sus propias ventas.
+    if (opciones.rol === 'profesional' && Number(venta.profesional_id) !== Number(opciones.profesionalId)) {
+      throw new ErrorApp('No podés cobrar la venta de otro profesional.', 403);
+    }
     if (!tipo) tipo = 'producto';
   }
   if (alquilerId) {
@@ -146,7 +150,14 @@ export function registrarVenta(datos, opciones = {}) {
   if (!producto) throw new ErrorApp('El producto no existe.', 404);
   if (!producto.activo) throw new ErrorApp('El producto está desactivado.', 409);
 
-  const profesionalId = entero(datos.profesional_id, opciones.profesionalId || 0);
+  // El profesional vende a su nombre: el profesional_id del cuerpo se ignora.
+  // Si no está vinculado a una ficha, no puede vender.
+  const profesionalId = opciones.rol === 'profesional'
+    ? Number(opciones.profesionalId || 0)
+    : entero(datos.profesional_id, opciones.profesionalId || 0);
+  if (opciones.rol === 'profesional' && !profesionalId) {
+    throw new ErrorApp('Tu usuario no está vinculado a una ficha de profesional.', 400);
+  }
   const profesional = db.uno('SELECT * FROM profesionales WHERE id = ?', [profesionalId]);
   if (!profesional) throw new ErrorApp('Indicá qué profesional realizó la venta.', 400);
 

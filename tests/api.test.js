@@ -242,9 +242,16 @@ test('programa los recordatorios futuros y descarta los que ya pasaron', async (
   assert.equal(dosHoras.estado, 'en_cola');
   assert.equal(dosHoras.programado_para, `${DIA} 08:00`);
 
-  // El de 24 h caería hoy a las 10:00, o sea en el pasado: no se programa.
+  // El de 24 h caería hoy a las 10:00. Si todavía no son las 10:00, se programa;
+  // si ya pasaron, no. La prueba se adapta a la hora en que se ejecuta.
   const veinticuatro = recordatorios.find((m) => m.plantilla === 'recordatorio_24h');
-  assert.equal(veinticuatro, undefined, 'no se programa un recordatorio cuya hora ya pasó');
+  const limite = new Date(`${DIA}T10:00:00`);
+  limite.setDate(limite.getDate() - 1);
+  if (new Date() < limite) {
+    assert.equal(veinticuatro.estado, 'en_cola', 'todavía cae en el futuro: se programa');
+  } else {
+    assert.equal(veinticuatro, undefined, 'ya pasó: no se programa');
+  }
 });
 
 test('rechaza un turno superpuesto del mismo profesional', async () => {
@@ -518,6 +525,12 @@ test('crea un usuario de recepción y otro profesional', async () => {
   assert.equal(recep.estado, 200);
   ctx.cookieRecepcion = cookie;
 
+  // Guardamos también la sesión de administración: a partir de acá la cookie
+  // ambiente queda en la última cuenta que se logueó.
+  const admin = await api('POST', '/api/auth/login', { email: 'admin@test.local', clave: 'clave-admin-123' });
+  assert.equal(admin.estado, 200);
+  ctx.cookieAdmin = cookie;
+
   const beto = await api('POST', '/api/auth/login', { email: 'beto@test.local', clave: 'beto-clave-123' });
   assert.equal(beto.estado, 200);
   assert.equal(beto.datos.usuario.profesional_id, ctx.beto);
@@ -552,6 +565,119 @@ test('recepción no puede ver márgenes ni cambiar comisiones', async () => {
 
   const comision = await api('PUT', `/api/profesionales/${ctx.ana}`, { comision_servicios_pct: 90 });
   assert.equal(comision.estado, 403);
+  cookie = guardada;
+});
+
+test('recepción no ve liquidaciones', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieRecepcion;
+  const r = await api('GET', `/api/reportes/liquidacion?profesional_id=${ctx.ana}`);
+  assert.equal(r.estado, 403);
+  cookie = guardada;
+});
+
+test('el profesional solo ve su propio resumen del día', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieAdmin;
+
+  // Turno nuevo de Ana, para no depender del estado de los turnos anteriores.
+  const deAna = await api('POST', '/api/turnos', {
+    profesional_id: ctx.ana,
+    inicio: `${DIA} 12:00`,
+    duracion_min: 30,
+    precio_manual_centavos: 900000,
+    concepto: 'Solo agenda',
+    cliente_nombre: 'Prueba de alcance',
+    enviar_whatsapp: false,
+  });
+  assert.equal(deAna.estado, 201);
+  ctx.turnoSoloAna = deAna.datos.turno.id;
+
+  cookie = ctx.cookieBeto;
+  const suyo = await api('GET', `/api/agenda/hoy?fecha=${DIA}`);
+  assert.equal(suyo.estado, 200);
+  assert.ok(
+    suyo.datos.proximos.every((t) => Number(t.profesional_id) === Number(ctx.beto)),
+    'solo turnos propios en el resumen',
+  );
+  assert.ok(
+    !suyo.datos.proximos.some((t) => Number(t.id) === Number(ctx.turnoSoloAna)),
+    'no aparece el turno de Ana',
+  );
+  cookie = ctx.cookieAdmin;
+
+  const admin = await api('GET', `/api/agenda/hoy?fecha=${DIA}`);
+  assert.ok(
+    admin.datos.proximos.some((t) => Number(t.id) === Number(ctx.turnoSoloAna)),
+    'administración sí ve el turno de Ana',
+  );
+  cookie = guardada;
+});
+
+test('el profesional no abre ni edita la ficha de un cliente ajeno', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieBeto;
+  const ficha = await api('GET', `/api/clientes/${ctx.cliente}`);
+  assert.equal(ficha.estado, 403);
+
+  const edicion = await api('PUT', `/api/clientes/${ctx.cliente}`, { nombre: 'Nombre cambiado' });
+  assert.equal(edicion.estado, 403);
+  cookie = guardada;
+});
+
+test('el profesional no ve comisiones ni alquiler del equipo', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieBeto;
+  const r = await api('GET', '/api/profesionales');
+  assert.equal(r.estado, 200);
+  assert.ok(
+    r.datos.every((p) => p.comision_servicios_pct === undefined && p.alquiler_centavos === undefined),
+    'sin datos de comisión ni alquiler',
+  );
+  cookie = guardada;
+});
+
+test('el profesional no lee horarios de otro profesional', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieBeto;
+  const ajeno = await api('GET', `/api/profesionales/${ctx.ana}/horarios`);
+  assert.equal(ajeno.estado, 403);
+  const propio = await api('GET', `/api/profesionales/${ctx.beto}/horarios`);
+  assert.equal(propio.estado, 200);
+  cookie = guardada;
+});
+
+test('la venta queda a nombre del profesional aunque mande otro id', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieBeto;
+  const r = await api('POST', '/api/ventas', {
+    producto_id: ctx.producto,
+    cantidad: 1,
+    profesional_id: ctx.ana,
+  });
+  assert.equal(r.estado, 201);
+  assert.equal(Number(r.datos.venta.profesional_id), Number(ctx.beto), 'se ignora el profesional ajeno');
+  cookie = guardada;
+});
+
+test('el profesional no ve los mensajes de WhatsApp de otro', async () => {
+  const guardada = cookie;
+  cookie = ctx.cookieAdmin;
+
+  const delTurno = await api('GET', `/api/whatsapp/mensajes?turno_id=${ctx.turno}`);
+  const mensaje = delTurno.datos.find((m) => m.plantilla === 'turno_confirmacion') || delTurno.datos[0];
+  assert.ok(mensaje, 'el turno de Ana tiene mensajes');
+
+  cookie = ctx.cookieBeto;
+  const bandeja = await api('GET', '/api/whatsapp/mensajes');
+  assert.equal(bandeja.estado, 200);
+  assert.ok(
+    bandeja.datos.every((m) => Number(m.turno_id) !== Number(ctx.turno)),
+    'no aparece ningún mensaje del turno ajeno',
+  );
+
+  const porId = await api('GET', `/api/whatsapp/mensajes/${mensaje.id}`);
+  assert.equal(porId.estado, 403);
   cookie = guardada;
 });
 

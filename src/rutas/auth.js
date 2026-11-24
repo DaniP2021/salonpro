@@ -2,6 +2,7 @@
 
 import { HORAS_SESION } from '../config.js';
 import { GET, POST, cookie } from '../router.js';
+import { registrarCambioClaveDemo } from '../demo-credenciales.js';
 import * as usuarios from '../dominio/usuarios.js';
 import * as negocio from '../dominio/negocio.js';
 
@@ -38,6 +39,8 @@ export function registrar() {
 
   POST('/api/auth/clave', (ctx) => {
     usuarios.cambiarClave(ctx.usuario.id, ctx.cuerpo.actual, ctx.cuerpo.nueva);
+    // Solo en la demo: mantiene sincronizado el archivo de credenciales.
+    registrarCambioClaveDemo(ctx.usuario.email, ctx.cuerpo.nueva);
     ctx.cookie(NOMBRE_COOKIE, '', { maxAge: 0, ...opcionesCookie() });
     return { ok: true, mensaje: 'Contraseña actualizada. Volvé a iniciar sesión.' };
   });

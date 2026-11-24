@@ -525,20 +525,30 @@ export function disponibilidad(profesionalId, fecha, duracionMin, opciones = {})
 
 // ------------------------------------------------------------- resumen
 
-export function resumenDia(fecha) {
+export function resumenDia(fecha, profesionalId = null) {
   const dia = (fecha || ahoraTexto()).slice(0, 10);
+  const prof = profesionalId ? entero(profesionalId) : null;
   const filas = db.consultar(
     `SELECT estado, COUNT(*) AS cantidad, COALESCE(SUM(precio_total_centavos), 0) AS total
-     FROM turnos WHERE inicio >= ? AND inicio <= ? GROUP BY estado`,
-    [`${dia} 00:00`, `${dia} 23:59`],
+     FROM turnos WHERE inicio >= ? AND inicio <= ?${prof ? ' AND profesional_id = ?' : ''} GROUP BY estado`,
+    prof ? [`${dia} 00:00`, `${dia} 23:59`, prof] : [`${dia} 00:00`, `${dia} 23:59`],
   );
   const porEstado = Object.fromEntries(filas.map((f) => [f.estado, { cantidad: f.cantidad, total: f.total }]));
-  const cobrado = db.numero('SELECT COALESCE(SUM(monto_centavos), 0) FROM pagos WHERE fecha >= ? AND fecha <= ?', [`${dia} 00:00`, `${dia} 23:59`]);
+  // El cobrado se toma de los pagos de los turnos del profesional, no de toda la caja.
+  const cobrado = prof
+    ? db.numero(
+      `SELECT COALESCE(SUM(pg.monto_centavos), 0) FROM pagos pg
+       JOIN turnos t ON t.id = pg.turno_id
+       WHERE pg.fecha >= ? AND pg.fecha <= ? AND t.profesional_id = ?`,
+      [`${dia} 00:00`, `${dia} 23:59`, prof],
+    )
+    : db.numero('SELECT COALESCE(SUM(monto_centavos), 0) FROM pagos WHERE fecha >= ? AND fecha <= ?', [`${dia} 00:00`, `${dia} 23:59`]);
   const proximos = listarTurnos({
     desde: ahoraTexto(),
     hasta: `${dia} 23:59`,
     estado: 'pendiente,confirmado',
     limite: 20,
+    profesional_id: prof,
   });
   return {
     fecha: dia,

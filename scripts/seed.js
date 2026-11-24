@@ -18,6 +18,9 @@ import * as caja from '../src/dominio/caja.js';
 import * as whatsapp from '../src/dominio/whatsapp.js';
 
 const FORZAR = process.argv.includes('--si');
+// En la demo publica conviene "enlace": cada mensaje genera un link wa.me con el
+// texto cargado para enviarlo desde un telefono real, sin credenciales de Meta.
+const MODO_WA = process.env.SALON_WA_MODO === 'enlace' ? 'enlace' : 'consola';
 
 // --------------------------------------------------------------- azar fijo
 let semilla = 20261111;
@@ -336,13 +339,13 @@ console.log(`Turnos históricos: ${creados} creados (${omitidos} omitidos por su
 // ------------------------------------------------------------ turnos futuros
 
 const waGeneral = whatsapp.crearCuenta({
-  etiqueta: 'WhatsApp del salón', proveedor: 'consola', numero_publico: '11 4832 7700',
+  etiqueta: 'WhatsApp del salón', proveedor: MODO_WA, numero_publico: '11 4832 7700',
 });
 for (const profesional of profesionales) {
   whatsapp.crearCuenta({
     etiqueta: `WhatsApp de ${profesional.nombre.split(' ')[0]}`,
     profesional_id: profesional.id,
-    proveedor: 'consola',
+    proveedor: MODO_WA,
     numero_publico: profesional.telefono,
   });
 }

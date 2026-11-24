@@ -3,7 +3,7 @@
 import * as db from '../db.js';
 import { GET, POST, PUT, DELETE, creado, textoRespuesta } from '../router.js';
 import { ErrorApp } from '../util.js';
-import { ROL_ADMIN, ROL_GESTION, ROL_TODOS, profesionalPermitido } from './_comun.js';
+import { ROL_ADMIN, ROL_GESTION, ROL_TODOS, exigirClienteEnCartera, profesionalPermitido } from './_comun.js';
 import * as whatsapp from '../dominio/whatsapp.js';
 
 export function registrar() {
@@ -15,7 +15,9 @@ export function registrar() {
 
   DELETE('/api/whatsapp/cuentas/{id:num}', (ctx) => whatsapp.eliminarCuenta(ctx.paramId()), { roles: ROL_ADMIN });
 
-  GET('/api/whatsapp/estado', () => whatsapp.estadoGeneral(), { roles: ROL_TODOS });
+  GET('/api/whatsapp/estado', (ctx) => whatsapp.estadoGeneral(
+    ctx.usuario.rol === 'profesional' ? ctx.usuario.profesional_id : null,
+  ), { roles: ROL_TODOS });
 
   GET('/api/whatsapp/mensajes', (ctx) => whatsapp.listarMensajes({
     estado: ctx.q('estado'),
@@ -23,6 +25,7 @@ export function registrar() {
     plantilla: ctx.q('plantilla'),
     q: ctx.q('q'),
     limite: ctx.qNum('limite', 200),
+    profesional_id: ctx.usuario.rol === 'profesional' ? ctx.usuario.profesional_id : null,
   }), { roles: ROL_TODOS });
 
   /** Envío manual: sirve para reenviar una plantilla o avisar un hueco libre. */
@@ -34,6 +37,22 @@ export function registrar() {
       if (!turno) throw new ErrorApp('El turno no existe.', 404);
       if (ctx.usuario.rol === 'profesional' && Number(turno.profesional_id) !== Number(ctx.usuario.profesional_id)) {
         throw new ErrorApp('Solo podés enviar mensajes de tus propios turnos.', 403);
+      }
+    }
+
+    // Un profesional solo escribe a sus propios clientes: al teléfono del turno
+    // o al de una ficha de su cartera. Nunca a un número suelto.
+    let paraObligatorio = null;
+    if (ctx.usuario.rol === 'profesional') {
+      if (turno) {
+        paraObligatorio = turno.cliente_telefono || '';
+      } else {
+        const clienteId = Number(cuerpo.cliente_id || 0);
+        if (!clienteId) throw new ErrorApp('Elegí un turno o un cliente tuyo para enviar el mensaje.', 403);
+        exigirClienteEnCartera(ctx, clienteId);
+        const cliente = db.uno('SELECT telefono FROM clientes WHERE id = ?', [clienteId]);
+        paraObligatorio = cliente?.telefono || '';
+        if (!paraObligatorio) throw new ErrorApp('Ese cliente no tiene teléfono cargado.', 400);
       }
     }
     const plantilla = String(cuerpo.plantilla || 'gracias_visita');
@@ -51,7 +70,7 @@ export function registrar() {
       telefono: db.leerAjuste('telefono', ''),
       link_confirmacion: '',
     };
-    const para = cuerpo.para || turno?.cliente_telefono || '';
+    const para = paraObligatorio || cuerpo.para || turno?.cliente_telefono || '';
     const cuenta = turno ? whatsapp.cuentaPara(turno.profesional_id) : whatsapp.cuentaPara(null);
     const mensaje = whatsapp.encolar({
       cuentaId: cuenta?.id ?? null,
@@ -96,6 +115,18 @@ export function registrar() {
   GET('/api/whatsapp/mensajes/{id:num}', (ctx) => {
     const mensaje = db.uno('SELECT * FROM wa_mensajes WHERE id = ?', [ctx.paramId()]);
     if (!mensaje) throw new ErrorApp('El mensaje no existe.', 404);
+    if (ctx.usuario.rol === 'profesional') {
+      const prof = Number(ctx.usuario.profesional_id);
+      const delTurno = mensaje.turno_id
+        ? db.uno('SELECT profesional_id FROM turnos WHERE id = ?', [mensaje.turno_id])
+        : null;
+      const deLaCuenta = mensaje.cuenta_id
+        ? db.uno('SELECT profesional_id FROM wa_cuentas WHERE id = ?', [mensaje.cuenta_id])
+        : null;
+      if (Number(delTurno?.profesional_id) !== prof && Number(deLaCuenta?.profesional_id) !== prof) {
+        throw new ErrorApp('Ese mensaje no es de tu agenda.', 403);
+      }
+    }
     return mensaje;
   }, { roles: ROL_TODOS });
 

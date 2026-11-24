@@ -188,6 +188,10 @@ Para forzar el despacho sin esperar:
 node -e "const {procesarCola}=await import('./src/dominio/whatsapp.js'); console.log(await procesarCola());" --input-type=module
 ```
 
+> **Demo NetBird:** `.\demo-netbird.cmd` siembra las cuentas en modo `enlace`
+> (`SALON_WA_MODO=enlace`), así cada mensaje genera un `wa.me` para probar con un teléfono
+> real. Ver [`DEMO-NETBIRD.md`](DEMO-NETBIRD.md#42-probar-whatsapp-en-la-demo-modo-enlace).
+
 ---
 
 ## 7. Costos y límites operativos

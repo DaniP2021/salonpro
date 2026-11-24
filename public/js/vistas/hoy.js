@@ -1,7 +1,7 @@
 // Vista "Hoy": el tablero operativo del día.
 // Responde en 5 segundos: qué hay ahora, qué falta cobrar y qué necesita atención.
 
-import { api, estado, esGestion, esProfesional } from '../api.js';
+import { api, estado, esAdmin, esGestion, esProfesional } from '../api.js';
 import { dinero, fechaLarga, hora, hoyISO, telefonoLegible } from '../formato.js';
 import {
   aviso, boton, el, graficoBarras, icono, kpi, mensajeError, progreso, vaciar,
@@ -13,8 +13,10 @@ export async function montar(contenedor, ctx) {
   const hoy = hoyISO();
 
   ctx.cabecera({
-    titulo: 'Hoy',
-    subtitulo: fechaLarga(`${hoy} 00:00`).replace(', 00:00', ''),
+    titulo: esProfesional() ? 'Mi día' : 'Hoy',
+    subtitulo: esProfesional()
+      ? `${fechaLarga(`${hoy} 00:00`).replace(', 00:00', '')} · tus turnos y tus cobros`
+      : fechaLarga(`${hoy} 00:00`).replace(', 00:00', ''),
     acciones: [
       boton('Nuevo turno', {
         clase: 'laton', icono: 'mas',
@@ -27,7 +29,8 @@ export async function montar(contenedor, ctx) {
     api.get(`/api/agenda/hoy?fecha=${hoy}`),
     api.get(`/api/caja?fecha=${hoy}`).catch(() => null),
     api.get('/api/whatsapp/estado').catch(() => null),
-    api.get('/api/negocio/estado').catch(() => null),
+    // La puesta en marcha es una tarea de administración.
+    esAdmin() ? api.get('/api/negocio/estado').catch(() => null) : Promise.resolve(null),
   ]);
 
   const stockBajo = esGestion()
