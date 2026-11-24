@@ -141,6 +141,10 @@ async function ficha(contenedor, ctx, id) {
 
   vaciar(contenedor);
 
+  if (cliente.solo_mi_actividad) {
+    contenedor.appendChild(el('p', { clase: 'mini suave mb', texto: 'Ves solo tu actividad con este cliente: tus turnos y tus ventas.' }));
+  }
+
   const atendidos = cliente.historial.filter((t) => t.estado === 'atendido');
   const gastado = atendidos.reduce((suma, t) => suma + Number(t.pagado_centavos || 0), 0);
   const ticket = atendidos.length ? Math.round(gastado / atendidos.length) : 0;

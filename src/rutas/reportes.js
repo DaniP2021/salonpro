@@ -23,8 +23,14 @@ export function registrar() {
 
   GET('/api/reportes/serie', (ctx) => comisiones.serieDiaria(ctx.q('desde'), ctx.q('hasta')), { roles: ROL_ADMIN });
 
-  /** Liquidación de un profesional. El profesional solo puede ver la suya. */
+  /**
+   * Liquidación de un profesional. Administración ve cualquiera; el profesional,
+   * solo la suya; recepción no ve liquidaciones (ni comisiones ni márgenes).
+   */
   GET('/api/reportes/liquidacion', (ctx) => {
+    if (ctx.usuario.rol === 'recepcion') {
+      throw new ErrorApp('Las liquidaciones son solo de administración.', 403);
+    }
     const solicitado = ctx.qNum('profesional_id');
     const permitido = profesionalPermitido(ctx, solicitado);
     if (!permitido) throw new ErrorApp('Indicá de qué profesional querés la liquidación.', 400);
@@ -33,6 +39,9 @@ export function registrar() {
 
   /** Mis comisiones del período (atajo para el rol profesional). */
   GET('/api/reportes/mis-comisiones', (ctx) => {
+    if (ctx.usuario.rol !== 'profesional') {
+      throw new ErrorApp('Esta vista es para el rol profesional.', 403);
+    }
     if (!ctx.usuario.profesional_id) {
       throw new ErrorApp('Tu usuario no está vinculado a una ficha de profesional.', 400);
     }

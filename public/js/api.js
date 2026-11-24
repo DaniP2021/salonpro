@@ -116,6 +116,16 @@ export function esProfesional() {
   return estado.usuario?.rol === 'profesional';
 }
 
+/**
+ * Profesionales sobre los que el usuario puede operar.
+ * Un profesional solo se ve a sí mismo: no elige con qué compañero trabaja.
+ */
+export function profesionalesVisibles() {
+  if (!esProfesional()) return estado.profesionales;
+  const propio = Number(estado.usuario?.profesional_id);
+  return estado.profesionales.filter((p) => Number(p.id) === propio);
+}
+
 /** Símbolo de moneda configurado. */
 export function simbolo() {
   return estado.negocio?.simbolo || '$';

@@ -1,7 +1,7 @@
 // Vista "WhatsApp": estado de la integración, cuentas por profesional,
 // bandeja de salida con acuse de lectura y plantillas editables.
 
-import { api, estado, esAdmin, esGestion } from '../api.js';
+import { api, estado, esAdmin, esGestion, esProfesional } from '../api.js';
 import { ETIQUETA_WA, fechaCorta, telefonoLegible } from '../formato.js';
 import {
   aviso, boton, campos, capa, el, icono, mensajeError, tabla, vaciar,
@@ -12,7 +12,9 @@ export async function montar(contenedor, ctx) {
 
   ctx.cabecera({
     titulo: 'WhatsApp',
-    subtitulo: 'Confirmaciones, recordatorios y acuse de lectura por profesional',
+    subtitulo: esProfesional()
+      ? 'Tus confirmaciones, recordatorios y acuses de lectura'
+      : 'Confirmaciones, recordatorios y acuse de lectura por profesional',
   });
 
   let diagnostico;

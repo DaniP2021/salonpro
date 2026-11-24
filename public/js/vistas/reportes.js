@@ -17,6 +17,17 @@ export async function montar(contenedor, ctx) {
 
   if (esProfesional()) return misComisiones(contenedor, ctx, simbolo);
 
+  // Recepción cobra y agenda, pero no ve liquidaciones ni márgenes.
+  if (estado.usuario?.rol === 'recepcion') {
+    ctx.cabecera({ titulo: 'Reportes', subtitulo: 'Acceso restringido' });
+    vaciar(contenedor).appendChild(el('div', { clase: 'tarjeta' },
+      el('div', { clase: 'tarjeta-cuerpo' },
+        el('h2', { texto: 'Acceso limitado' }),
+        el('p', { clase: 'medio mt-chico', texto: 'Las liquidaciones, comisiones y márgenes del salón los ve solo la administración. La caja del día está disponible en "Caja y cobros".' }),
+        boton('Ir a caja', { clase: 'oscuro mt', on: () => ctx.navegar('#/caja') }))));
+    return;
+  }
+
   ctx.cabecera({
     titulo: 'Reportes',
     subtitulo: 'Cuánto facturó el salón, cuánto se llevó cada uno y cuánto queda en el local',

@@ -1,7 +1,7 @@
 // Componentes compartidos de turno: alta, ficha de detalle y cobro.
 // Los usan las vistas Hoy, Agenda y Turnos.
 
-import { api, estado, esGestion } from '../api.js';
+import { api, estado, esGestion, profesionalesVisibles } from '../api.js';
 import {
   aCentavos, dinero, ETIQUETA_METODO, ETIQUETA_WA, fechaCorta, fechaLarga,
   hora, hoyISO, minutosAHora, telefonoLegible,
@@ -48,7 +48,8 @@ export async function abrirNuevoTurno(opciones = {}) {
     clienteId: opciones.clienteId || null,
     clienteNombre: '',
     clienteTelefono: '',
-    profesionalId: opciones.profesionalId || (estado.profesionales[0]?.id ?? null),
+    profesionalId: opciones.profesionalId
+      || (profesionalesVisibles()[0]?.id ?? null),
     fecha: opciones.fecha || hoyISO(),
     hora: opciones.hora || '',
     servicios: new Set(opciones.servicioId ? [Number(opciones.servicioId)] : []),
@@ -246,7 +247,7 @@ export async function abrirNuevoTurno(opciones = {}) {
         },
       },
     });
-    for (const profesional of estado.profesionales) {
+    for (const profesional of profesionalesVisibles()) {
       const opcion = el('option', {
         value: profesional.id,
         texto: `${profesional.nombre}${profesional.modalidad === 'alquiler' ? ' (alquila espacio)' : ''}`,
@@ -675,7 +676,7 @@ export function abrirVentaProducto(turno, alTerminar) {
     { clave: 'cantidad', label: 'Cantidad', tipo: 'numero', valor: 1, min: 1 },
     {
       clave: 'profesional_id', label: 'Vendido por', tipo: 'select', requerido: true,
-      opciones: estado.profesionales.map((p) => ({ valor: p.id, texto: p.nombre })),
+      opciones: profesionalesVisibles().map((p) => ({ valor: p.id, texto: p.nombre })),
       valor: turno.profesional_id,
     },
     { clave: 'cobrar_ahora', label: 'Cobrar ahora', tipo: 'check', valor: true, pista: 'Se registra el cobro junto con la venta.' },
@@ -756,7 +757,7 @@ function abrirReprogramar(turno, alTerminar) {
   const formulario = campos([
     {
       clave: 'profesional_id', label: 'Profesional', tipo: 'select', requerido: true,
-      opciones: estado.profesionales.map((p) => ({ valor: p.id, texto: p.nombre })),
+      opciones: profesionalesVisibles().map((p) => ({ valor: p.id, texto: p.nombre })),
       valor: turno.profesional_id,
     },
     { clave: 'fecha', label: 'Fecha', tipo: 'fecha', valor: turno.inicio.slice(0, 10), requerido: true },

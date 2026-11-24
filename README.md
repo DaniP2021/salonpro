@@ -148,6 +148,11 @@ También desde la terminal:
 $env:SALON_HOST='0.0.0.0'; node server.js
 ```
 
+**Demo pública temporal (HTTPS, sin instalar nada en el invitado).** Con NetBird
+instalado y conectado, `.\demo-netbird.cmd` levanta una copia de prueba en el puerto
+8100, la expone con `netbird expose`, copia el link HTTPS y limpia todo al cortar.
+Requiere Peer Expose activo en el panel; ver [docs/DEMO-NETBIRD.md](docs/DEMO-NETBIRD.md).
+
 > **Antes de dejarlo abierto en la red, cambiá la contraseña del administrador** desde
 > *Ajustes → Cambiar contraseña*. La de la demo (`salon2026`) está publicada en este repositorio y
 > cualquiera en la red podría entrar con ella.
@@ -181,7 +186,7 @@ src/rutas/                endpoints REST por módulo
 public/                   SPA: HTML, CSS y módulos ES
 scripts/seed.js           datos de demostración
 scripts/verificar.js      chequeo de instalación (18 verificaciones)
-tests/api.test.js         45 pruebas end-to-end
+tests/api.test.js         52 pruebas end-to-end
 docs/                     plan, modelo de datos, WhatsApp y operación
 ```
 
@@ -196,8 +201,8 @@ node server.js                       # arranca en http://127.0.0.1:8000
 $env:SALON_PORT='8111'; node server.js   # cambia el puerto
 node scripts/seed.js --si            # datos de demostración (borra la operación)
 node scripts/verificar.js            # 18 chequeos de instalación (servidor en marcha)
-node tests/api.test.js               # 45 pruebas end-to-end sobre base temporal
-node tests/ui.test.js                # 16 comprobaciones de la interfaz (servidor en marcha)
+node tests/api.test.js               # 52 pruebas end-to-end sobre base temporal
+node tests/ui.test.js                # 20 comprobaciones de la interfaz (servidor en marcha)
 node scripts/captura-ui.js           # capturas de cada vista (opcional, requiere Chromium)
 ```
 
@@ -252,8 +257,8 @@ Los respaldos y el archivo `data/` están en `.gitignore`: no se versionan.
 | Backend y API (95 rutas) | Completo |
 | Reglas de negocio (agenda, comisiones, caja) | Completo |
 | Interfaz (10 pantallas) | Completo |
-| Pruebas end-to-end | 45/45 |
-| Verificación de interfaz (render de las 10 vistas) | 16/16 |
+| Pruebas end-to-end | 52/52 |
+| Verificación de interfaz (render de las 10 vistas) | 20/20 |
 | Datos de demostración | Completo |
 | Integración Meta Cloud API | Código completo, **sin credenciales**: corre en modo consola |
 | Captura visual en navegador | Pendiente: el navegador no arranca en el entorno de desarrollo usado |
